@@ -1,14 +1,12 @@
 # auth.py
 from datetime import datetime, timedelta
+from config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES #
 from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 import os
 
-# Configuration from .env
-SECRET_KEY = os.getenv("SECRET_KEY", "your-super-secret-key-for-cruk")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],

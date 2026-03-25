@@ -18,6 +18,6 @@ def save_project(
     current_user: models.User = Depends(get_current_user)
 ):
     # Pull team_id from the request (sent by UploadTopBar)
-    team_id = project_in.metadata_blob.get('team_id')
+    team_id = project_in.team_id
     return crud.create_project(db, project_in, current_user.id, team_id)
 

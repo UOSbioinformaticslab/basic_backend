@@ -7,6 +7,7 @@ from datetime import datetime
 
 class DatasetBase(BaseModel):
     metadata_blob: dict  # Validates the JSON object
+    team_id:Optional[int] = None
     status: Optional[str] = "DRAFT"
 
 
@@ -46,6 +47,7 @@ class DatasetResponse(DatasetBase):
 
 class ProjectBase(BaseModel):
     metadata_blob: dict
+    team_id: Optional[int] = None
 
 class ProjectCreate(ProjectBase):
     status: str = "DRAFT"
