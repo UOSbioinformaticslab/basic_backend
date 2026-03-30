@@ -3,55 +3,96 @@ import models
 from auth import get_password_hash
 from database import SessionLocal, engine, Base
 
-
 def seed_data():
-    # 1. Create a fresh session
     db = SessionLocal()
 
     try:
         print("Resetting database for many-to-many schema...")
-        # Drop and recreate to handle the new association table structure
         Base.metadata.drop_all(bind=engine)
         Base.metadata.create_all(bind=engine)
 
-        # 2. Create Research Teams
-        # These are the options the user will see in their Header dropdown
+        # 1. Create Research Teams
         team_imaging = models.Team(name="CRUK Imaging Group")
         team_pathology = models.Team(name="CRUK Pathology Group")
         team_genomics = models.Team(name="CRUK Genomics Hub")
 
         db.add_all([team_imaging, team_pathology, team_genomics])
-        db.commit()  # Commit teams first to generate IDs
+        db.commit()
 
-        # 3. Create a Single User
-        # We define the user profile without a fixed team_id
+        # 2. Create Users
         admin_user = models.User(
             email="admin@sussex.ac.uk",
             name="Principal Investigator",
             hashed_password=get_password_hash("securepassword123")
         )
 
-        # 4. Assign the User to Multiple Teams
-        # SQLAlchemy handles the 'user_teams' association table automatically via .append()
+        # Sarah Wooller
+        sarah_user = models.User(
+            email="me@sussex.ac.uk",
+            name="Sarah Wooller",
+            hashed_password=get_password_hash("securepassword123")
+        )
+
+        # 3. Assign Users to Teams
+        # Principal Investigator in Imaging and Pathology
         admin_user.teams.append(team_imaging)
         admin_user.teams.append(team_pathology)
 
-        db.add(admin_user)
+        # Sarah Wooller in all three teams
+        sarah_user.teams.append(team_imaging)
+        sarah_user.teams.append(team_pathology)
+        sarah_user.teams.append(team_genomics)
+
+        db.add_all([admin_user, sarah_user])
+        db.commit()
+
+        # 4. Create Projects for team_imaging
+        # Project 1: Imaging of Prostatic Carcinoma
+        project1 = models.Project(
+            pid="PID-CRUK-001",
+            version="1.0",
+            projectGrantName="Imaging of Prostatic Carcinoma",
+            leadResearcher="Sarah Wooller",
+            leadResearchInstitute="University of Sussex",
+            grantNumbers="CRUK-2026-X1",
+            projectGrantStartDate="2026-01-01",
+            projectGrantEndDate="2029-12-31",
+            projectGrantScope="Analysis of MRI data for early detection of prostatic carcinoma.",
+            metadata_blob={"internal_ref": "SUSSEX-IMG-01"},
+            status="DRAFT",
+            user=sarah_user,
+            team=team_imaging
+        )
+
+        # Project 2: Comparative Imaging Study
+        project2 = models.Project(
+            pid="PID-CRUK-002",
+            version="1.1",
+            projectGrantName="Comparative Imaging Study",
+            leadResearcher="Sarah Wooller",
+            leadResearchInstitute="University of Sussex",
+            grantNumbers="CRUK-2026-X2",
+            projectGrantStartDate="2026-06-01",
+            projectGrantEndDate="2030-05-31",
+            projectGrantScope="A study comparing digital pathology and imaging modalities.",
+            metadata_blob={"internal_ref": "SUSSEX-IMG-02"},
+            status="DRAFT",
+            user=sarah_user,
+            team=team_imaging
+        )
+
+        db.add_all([project1, project2])
         db.commit()
 
         print("\n--- Seeding Successful ---")
-        print(f"User: {admin_user.name} ({admin_user.email})")
-        print(f"Assigned Teams: {[t.name for t in admin_user.teams]}")
-        print("\nTest Credentials:")
-        print("Username: admin@sussex.ac.uk")
-        print("Password: securepassword123")
+        print(f"Users seeded: {admin_user.email}, {sarah_user.email}")
+        print(f"Projects seeded for team '{team_imaging.name}': 2")
 
     except Exception as e:
         print(f"Error during seeding: {e}")
         db.rollback()
     finally:
         db.close()
-
 
 if __name__ == "__main__":
     seed_data()

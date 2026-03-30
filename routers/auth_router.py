@@ -28,6 +28,7 @@ def login_for_access_token(
         "access_token": access_token,
         "token_type": "bearer",
         "user": {
+            "id": user.id,
             "name": user.name,
             "email": user.email,
             "teams": [{"id": t.id, "name": t.name} for t in user.teams]
