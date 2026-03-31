@@ -1,7 +1,7 @@
 # models.py
-from sqlalchemy import Table, Column, Integer, String, JSON, DateTime, ForeignKey, Boolean
+from sqlalchemy import UniqueConstraint, Table, Column, Integer, String, JSON, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from database import Base
 
 # Association table for Many-to-Many
@@ -12,6 +12,25 @@ user_teams = Table(
     Column("team_id", Integer, ForeignKey("teams.id"), primary_key=True),
 )
 
+class ProjectDataset(Base):
+    __tablename__ = "project_datasets"
+    id = Column(Integer, primary_key=True, index=True)
+
+    # Linked via internal row IDs
+    project_id = Column(Integer, ForeignKey("projects.id"))
+    dataset_id = Column(Integer, ForeignKey("datasets.id"))
+
+    # Modernized timestamps for Python 3.13
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime,
+                        default=lambda: datetime.now(timezone.utc),
+                        onupdate=lambda: datetime.now(timezone.utc))
+
+    project = relationship("Project", back_populates="project_datasets")
+    dataset = relationship("Dataset", back_populates="project_datasets")
+
+    # Prevent duplicate links
+    __table_args__ = (UniqueConstraint('project_id', 'dataset_id', name='_project_dataset_uc'),)
 
 class Team(Base):
     __tablename__ = "teams"
@@ -20,7 +39,6 @@ class Team(Base):
     datasets = relationship("Dataset", back_populates="team")
     members = relationship("User", secondary=user_teams, back_populates="teams")
     projects = relationship("Project", back_populates="team")
-
 
 class User(Base):
     __tablename__ = "users"
@@ -49,10 +67,12 @@ class Dataset(Base):
     status = Column(String, default="DRAFT")
     user_id = Column(Integer, ForeignKey("users.id"))
     team_id = Column(Integer, ForeignKey("teams.id"))
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.utcnow)
     user = relationship("User", back_populates="datasets")
     team = relationship("Team", back_populates="datasets")
+    project_datasets = relationship("ProjectDataset", back_populates="dataset")
+
 
 
 class Project(Base):
@@ -83,8 +103,9 @@ class Project(Base):
     team_id = Column(Integer, ForeignKey("teams.id"))
 
     # Timestamps for record lifecycle management
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
 
     user = relationship("User", back_populates="projects")
     team = relationship("Team", back_populates="projects")
+    project_datasets = relationship("ProjectDataset", back_populates="project")

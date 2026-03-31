@@ -30,11 +30,18 @@ def create_project(db: Session, project: schemas.ProjectCreate, user_id: int, te
     # **project_data now automatically populates the 11 explicit columns
     # (projectGrantName, leadResearcher, etc.) defined in models.py
     db_project = models.Project(
-        **project_data,
-        user_id=user_id,
+        **project_data
 
     )
     db.add(db_project)
     db.commit()
     db.refresh(db_project)
     return db_project
+
+def create_project_dataset_link(db: Session, link: schemas.ProjectDatasetCreate):
+    # Create the link in the association table
+    db_link = models.ProjectDataset(**link.model_dump())
+    db.add(db_link)
+    db.commit()
+    db.refresh(db_link)
+    return db_link
