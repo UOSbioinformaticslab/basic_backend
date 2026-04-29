@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 from sqlalchemy.orm import Session
+from sqlalchemy import String, func
 import uuid
 from datetime import datetime
 
@@ -18,6 +19,24 @@ def list_all_datasets(db: Session = Depends(database.get_db)):
     Does NOT require a JWT token.
     """
     return db.query(models.Dataset).all()
+
+
+@router.get("/search", response_model=List[schemas.DatasetResponse])
+def search_datasets(
+        title: str,
+        db: Session = Depends(database.get_db)
+):
+    """
+    Search for a dataset by checking the specific summary.title path.
+    """
+    search_term = f"%{title}%"
+
+    # Extracts the specific key before applying the ILIKE filter
+    datasets = db.query(models.Dataset).filter(
+        func.json_extract(models.Dataset.metadata_blob, '$.summary.title').ilike(search_term)
+    ).all()
+
+    return datasets
 
 @router.post("/", response_model=schemas.DatasetResponse)
 def save_metadata_progress(
@@ -70,7 +89,38 @@ def save_metadata_progress(
         )
 
 
-# Add this at the end of datasets.py
+@router.put("/{dataset_id}", response_model=schemas.DatasetResponse)
+def update_metadata_progress(
+        dataset_id: int,
+        dataset_in: schemas.DatasetBase,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    # 1. Retrieve the existing dataset from the database
+    db_dataset = db.query(models.Dataset).filter(models.Dataset.id == dataset_id).first()
+
+    if not db_dataset:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+
+    # 2. Update the fields with the incoming data
+    db_dataset.metadata_blob = dataset_in.metadata_blob
+    db_dataset.team_id = dataset_in.team_id
+
+    # If your model/schema tracks status (like "DRAFT"), update it as well
+    if hasattr(dataset_in, 'status') and dataset_in.status:
+        db_dataset.status = dataset_in.status
+
+    # 3. Commit the changes
+    try:
+        db.commit()
+        db.refresh(db_dataset)
+        return db_dataset
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update metadata: {str(e)}"
+        )
 
 @router.post("/{dataset_id}/links/{project_id}", response_model=schemas.ProjectDatasetResponse)
 async def link_to_project(
@@ -101,3 +151,26 @@ async def link_to_project(
     # 4. Create the link using the new crud function
     link_data = schemas.ProjectDatasetCreate(project_id=project_id, dataset_id=dataset_id)
     return crud.create_project_dataset_link(db, link_data)
+
+
+@router.delete("/{dataset_id}")
+def delete_dataset(
+        dataset_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    db_dataset = db.query(models.Dataset).filter(models.Dataset.id == dataset_id).first()
+
+    if not db_dataset:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+
+    try:
+        db.delete(db_dataset)
+        db.commit()
+        return {"message": "Dataset successfully deleted"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to delete dataset: {str(e)}"
+        )
