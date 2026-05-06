@@ -68,9 +68,13 @@ def create_user(user_in: schemas.UserCreate, db: Session = Depends(database.get_
     return db_user
 
 
-@router.get("/users", response_model=List[schemas.UserResponse])
+@router.get("/users")
 def list_users(db: Session = Depends(database.get_db)):
-    """
-    Returns a list of all researchers and their assigned team IDs.
-    """
-    return db.query(models.User).all()
+    users = db.query(models.User).all()
+    # Manual conversion to see what's actually coming back
+    return [{"email": u.email, "name": u.name, "team": u.team_id} for u in users]
+
+"""@router.get("/users", response_model=List[schemas.UserResponse])
+def list_users(db: Session = Depends(database.get_db)):
+    
+    return db.query(models.User).all()"""

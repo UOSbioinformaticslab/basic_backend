@@ -21,6 +21,16 @@ def list_all_datasets(db: Session = Depends(database.get_db)):
     return db.query(models.Dataset).all()
 
 
+@router.get("/{dataset_id}", response_model=schemas.DatasetResponse)
+def get_public_dataset(dataset_id: int, db: Session = Depends(database.get_db)):
+    # Look up the dataset by its primary key ID
+    db_dataset = db.query(models.Dataset).filter(models.Dataset.id == dataset_id).first()
+
+    if not db_dataset:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+
+    return db_dataset
+
 @router.get("/search", response_model=List[schemas.DatasetResponse])
 def search_datasets(
         title: str,

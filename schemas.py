@@ -43,8 +43,8 @@ class UserCreate(BaseModel):
 
 class UserResponse(BaseModel):
     id: int
-    email: EmailStr
-    name: str
+    email: str
+    name: Optional[str]
     team_id: int
 
     class Config:
