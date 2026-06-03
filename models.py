@@ -109,3 +109,12 @@ class Project(Base):
     user = relationship("User", back_populates="projects")
     team = relationship("Team", back_populates="projects")
     project_datasets = relationship("ProjectDataset", back_populates="project")
+
+
+class CancerTermMapping(Base):
+    __tablename__ = "cancer_term_mappings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    topography = Column(String, index=True)
+    histology = Column(String, index=True)
+    associated_terms = Column(JSON)

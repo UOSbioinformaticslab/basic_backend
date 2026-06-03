@@ -1,8 +1,22 @@
 # schemas.py
 from pydantic import BaseModel, EmailStr
-from typing import Optional, Any
+from typing import Optional, List, Any
 from datetime import datetime
 
+class CancerTermMappingCreate(BaseModel):
+    topography: str
+    histology: str
+    associated_terms: List[dict[str, Any]]
+
+class CancerTermMappingResponse(CancerTermMappingCreate):
+    id: int
+
+    class Config:
+        from_attributes = True  # Allows Pydantic to read SQLAlchemy models
+
+class LookupRequest(BaseModel):
+    topographies: List[str]
+    histologies: List[str]
 
 # --- Dataset Schemas (Unchanged - Keeping datasetid flatcase) ---
 class DatasetBase(BaseModel):
@@ -24,6 +38,16 @@ class DatasetResponse(DatasetBase):
     class Config:
         from_attributes = True
 
+from pydantic import BaseModel
+from typing import Optional, List
+
+class DatasetSimpleResponse(BaseModel):
+    id: int
+    datasetid: Optional[str] = None
+    name: str
+
+    class Config:
+        from_attributes = True
 
 # --- User & Team Schemas ---
 class TeamResponse(BaseModel):

@@ -48,6 +48,35 @@ def search_datasets(
 
     return datasets
 
+
+@router.get("/list/simple", response_model=List[schemas.DatasetSimpleResponse])
+def get_simple_dataset_list(db: Session = Depends(database.get_db)):
+    """
+    Returns a lightweight list of all datasets containing only their ID,
+    datasetid, and extracted name.
+    """
+    records = db.query(
+        models.Dataset.id,
+        models.Dataset.datasetid,
+        models.Dataset.metadata_blob
+    ).all()
+
+    results = []
+    for record in records:
+        name = "Untitled Dataset"
+
+        # Safely extract the title from the JSON blob if it exists
+        if record.metadata_blob and isinstance(record.metadata_blob, dict):
+            name = record.metadata_blob.get("summary", {}).get("title", name)
+
+        results.append({
+            "id": record.id,
+            "datasetid": record.datasetid,
+            "name": name
+        })
+
+    return results
+
 @router.post("/", response_model=schemas.DatasetResponse)
 def save_metadata_progress(
         dataset_in: schemas.DatasetBase,
@@ -184,3 +213,72 @@ def delete_dataset(
             status_code=500,
             detail=f"Failed to delete dataset: {str(e)}"
         )
+
+
+@router.get("/extra-terms/{mapping_id}", response_model=schemas.CancerTermMappingResponse)
+def get_extra_term_by_id(
+        mapping_id: int,
+        db: Session = Depends(database.get_db)
+):
+    """
+    Retrieve a specific cancer term mapping record by its primary key ID.
+    """
+    record = db.query(models.CancerTermMapping).filter(
+        models.CancerTermMapping.id == mapping_id
+    ).first()
+
+    if not record:
+        raise HTTPException(status_code=404, detail="Mapping record not found")
+
+    return record
+
+
+@router.post("/extra-terms/record", response_model=schemas.CancerTermMappingResponse)
+def post_new_extra_term(
+        payload: schemas.CancerTermMappingCreate,
+        db: Session = Depends(database.get_db)
+):
+    """
+    Insert a new cancer term mapping record into the standalone database table.
+    """
+    db_record = models.CancerTermMapping(
+        topography=payload.topography,
+        histology=payload.histology,
+        associated_terms=payload.associated_terms
+    )
+
+    try:
+        db.add(db_record)
+        db.commit()
+        db.refresh(db_record)
+        return db_record
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database insertion failed: {str(e)}"
+        )
+
+@router.post("/extra-terms")
+def get_matching_terms(
+        req: schemas.LookupRequest,
+        db: Session = Depends(database.get_db)
+):
+    """
+    Given a list of topography and histology labels, returns a nested
+    mapping dictionary containing matching supplementary ontology records.
+    """
+    # Filter for mapping entries matching the criteria fields
+    records = db.query(models.CancerTermMapping).filter(
+        models.CancerTermMapping.topography.in_(req.topographies),
+        models.CancerTermMapping.histology.in_(req.histologies)
+    ).all()
+
+    # Rebuild the records back into the nested mapping layout
+    nested_map = {}
+    for record in records:
+        if record.topography not in nested_map:
+            nested_map[record.topography] = {}
+        nested_map[record.topography][record.histology] = record.associated_terms
+
+    return nested_map
