@@ -92,3 +92,17 @@ def delete_project(
             status_code=500,
             detail=f"Failed to delete project: {str(e)}"
         )
+
+
+@router.get("/{project_pid:path}", response_model=schemas.ProjectResponse)
+def get_project(project_pid: str, db: Session = Depends(database.get_db)):
+    """
+    Retrieve a specific project by its PID (which may contain slashes).
+    """
+    # Note: Querying by 'pid' instead of 'id' since the value is an alphanumeric string
+    db_project = db.query(models.Project).filter(models.Project.pid == project_pid).first()
+
+    if not db_project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    return db_project

@@ -3,6 +3,16 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional, List, Any
 from datetime import datetime
 
+class SnomedFilterResponse(BaseModel):
+    id: int
+    snomed_descriptor: str
+    icdo_code: str
+    topography: str
+    filter_code: str
+
+    class Config:
+        from_attributes = True
+
 class CancerTermMappingCreate(BaseModel):
     topography: str
     histology: str

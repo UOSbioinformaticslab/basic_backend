@@ -282,3 +282,4 @@ def get_matching_terms(
         nested_map[record.topography][record.histology] = record.associated_terms
 
     return nested_map
+
