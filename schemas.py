@@ -3,6 +3,7 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional, List, Any
 from datetime import datetime
 
+
 class SnomedFilterResponse(BaseModel):
     id: int
     snomed_descriptor: str
@@ -133,3 +134,68 @@ class ProjectDatasetResponse(ProjectDatasetBase):
 
     class Config:
         from_attributes = True
+
+from pydantic import BaseModel
+from typing import List, Dict, Any, Optional
+
+class PublicationBase(BaseModel):
+    paper_title: str
+    authors: List[Dict[str, Any]]
+    year_of_publication: str
+    paper_doi: str
+    journal_name: str
+    abstract: Optional[str] = None
+    url: Optional[str] = None
+    team_id: str
+
+class PublicationCreate(PublicationBase):
+    pass
+
+class Publication(PublicationBase):
+    id: str
+
+    class Config:
+        from_attributes = True # Use orm_mode = True if you are on Pydantic v1
+
+class PublicationHasDatasetBase(BaseModel):
+    publication_id: str
+    dataset_id: str
+
+class PublicationHasDatasetCreate(PublicationHasDatasetBase):
+    pass
+
+class PublicationHasDataset(PublicationHasDatasetBase):
+    class Config:
+        from_attributes = True
+
+
+def create_publication(db: Session, pub: schemas.PublicationCreate):
+    # Generate a unique ID for the publication
+    pub_id = str(uuid.uuid4())
+
+    db_publication = Publication(
+        id=pub_id,
+        paper_title=pub.paper_title,
+        authors=pub.authors,
+        year_of_publication=pub.year_of_publication,
+        paper_doi=pub.paper_doi,
+        journal_name=pub.journal_name,
+        abstract=pub.abstract,
+        url=pub.url,
+        team_id=pub.team_id
+    )
+    db.add(db_publication)
+    db.commit()
+    db.refresh(db_publication)
+    return db_publication
+
+
+def link_publication_to_dataset(db: Session, publication_id: str, dataset_id: str):
+    db_link = PublicationHasDataset(
+        publication_id=publication_id,
+        dataset_id=dataset_id
+    )
+    db.add(db_link)
+    db.commit()
+    db.refresh(db_link)
+    return db_link

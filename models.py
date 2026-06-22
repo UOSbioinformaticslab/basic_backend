@@ -72,7 +72,7 @@ class Dataset(Base):
     user = relationship("User", back_populates="datasets")
     team = relationship("Team", back_populates="datasets")
     project_datasets = relationship("ProjectDataset", back_populates="dataset")
-
+    publications = relationship("Publication", secondary=publication_has_dataset, back_populates="datasets")
 
 
 class Project(Base):
@@ -128,3 +128,23 @@ class SnomedFilter(Base):
     icdo_code = Column(String, unique=False, index=False, nullable=False)
     topography = Column(String, unique=False, index=False, nullable=False)
     filter_code = Column(String, unique=False, index=False, nullable=False)
+
+class Publication(Base):
+    __tablename__ = "publications"
+
+    id = Column(String, primary_key=True, index=True)
+    paper_title = Column(String)
+    authors = Column(JSON)
+    year_of_publication = Column(String)
+    paper_doi = Column(String, unique=True, index=True)
+    journal_name = Column(String)
+    abstract = Column(String)
+    url = Column(String)
+    team_id = Column(String, index=True)
+    datasets = relationship("Dataset", secondary=publication_has_dataset, back_populates="publications")
+
+class PublicationHasDataset(Base):
+    __tablename__ = "publication_has_dataset"
+
+    publication_id = Column(String, ForeignKey("publications.id", ondelete="CASCADE"), primary_key=True)
+    dataset_id = Column(String, ForeignKey("datasets.id", ondelete="CASCADE"), primary_key=True)

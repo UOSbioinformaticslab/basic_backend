@@ -4,29 +4,63 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e401d040-c62c-484d-a698-f02b5402e582" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/config.py" beforeDir="false" />
+    <list default="true" id="e401d040-c62c-484d-a698-f02b5402e582" name="Changes" comment="updating .gitignore">
+      <change afterPath="$PROJECT_DIR$/helpers/publication" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/routers/publications.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/add_dbs.py" beforeDir="false" afterPath="$PROJECT_DIR$/helpers/add_dbs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/change_extra_terms.py" beforeDir="false" afterPath="$PROJECT_DIR$/helpers/change_extra_terms.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cruk_datahub.db" beforeDir="false" afterPath="$PROJECT_DIR$/cruk_datahub.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fix.py" beforeDir="false" afterPath="$PROJECT_DIR$/helpers/fix.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/helpers/test_db.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
+    <favorite-branches>
+      <branch-storage>
+        <map>
+          <entry type="LOCAL">
+            <value>
+              <list>
+                <branch-info repo="$PROJECT_DIR$" source="dev" />
+              </list>
+            </value>
+          </entry>
+        </map>
+      </branch-storage>
+    </favorite-branches>
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="main" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "SarahWooller"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;SarahWooller&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "git@github.com:SarahWooller/fastapi-backend.git",
-    "accountId": "6064b4c3-3226-402f-b080-50e0dc41e517"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;git@github.com:SarahWooller/fastapi-backend.git&quot;,
+    &quot;accountId&quot;: &quot;6064b4c3-3226-402f-b080-50e0dc41e517&quot;
   }
-}]]></component>
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 5
 }</component>
@@ -41,10 +75,18 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "/Users/skw24/CRUK/backend"
+    "git-widget-placeholder": "dev",
+    "last_opened_file_path": "/Users/skw24/CRUK/website/fastapi-backend/routers"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/routers" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/helpers" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -61,6 +103,19 @@
       <option name="presentableId" value="Default" />
       <updated>1774446444927</updated>
     </task>
+    <task id="LOCAL-00001" summary="updating .gitignore">
+      <option name="closed" value="true" />
+      <created>1782131091380</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1782131091380</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="updating .gitignore" />
+    <option name="LAST_COMMIT_MESSAGE" value="updating .gitignore" />
   </component>
 </project>
