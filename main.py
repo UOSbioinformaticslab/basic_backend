@@ -1,7 +1,7 @@
 # main.py
 from fastapi import FastAPI
 from database import engine, Base
-from routers import snomed_filters, datasets, projects, admin, auth_router # Rename to avoid conflict with auth.py
+from routers import snomed_filters, publications, datasets, projects, admin, auth_router # Rename to avoid conflict with auth.py
 from fastapi.middleware.cors import CORSMiddleware
 
 # Create tables
@@ -24,6 +24,7 @@ app.include_router(datasets.router)
 app.include_router(projects.router)
 app.include_router(admin.router)
 app.include_router(snomed_filters.router)
+app.include_router(publications.router)
 
 @app.get("/")
 def health_check():

@@ -72,7 +72,7 @@ class Dataset(Base):
     user = relationship("User", back_populates="datasets")
     team = relationship("Team", back_populates="datasets")
     project_datasets = relationship("ProjectDataset", back_populates="dataset")
-    publications = relationship("Publication", secondary=publication_has_dataset, back_populates="datasets")
+    publications = relationship("Publication", secondary="publication_has_dataset", back_populates="datasets")
 
 
 class Project(Base):
@@ -109,7 +109,7 @@ class Project(Base):
     user = relationship("User", back_populates="projects")
     team = relationship("Team", back_populates="projects")
     project_datasets = relationship("ProjectDataset", back_populates="project")
-
+    publications = relationship("Publication", secondary="publication_has_project", back_populates="projects")
 
 class CancerTermMapping(Base):
     __tablename__ = "cancer_term_mappings"
@@ -132,7 +132,7 @@ class SnomedFilter(Base):
 class Publication(Base):
     __tablename__ = "publications"
 
-    id = Column(String, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     paper_title = Column(String)
     authors = Column(JSON)
     year_of_publication = Column(String)
@@ -140,11 +140,18 @@ class Publication(Base):
     journal_name = Column(String)
     abstract = Column(String)
     url = Column(String)
-    team_id = Column(String, index=True)
-    datasets = relationship("Dataset", secondary=publication_has_dataset, back_populates="publications")
+    team_id = Column(Integer, ForeignKey("teams.id"))
+    datasets = relationship("Dataset", secondary="publication_has_dataset", back_populates="publications")
+    projects = relationship("Project", secondary="publication_has_project", back_populates="publications")
 
 class PublicationHasDataset(Base):
     __tablename__ = "publication_has_dataset"
 
-    publication_id = Column(String, ForeignKey("publications.id", ondelete="CASCADE"), primary_key=True)
-    dataset_id = Column(String, ForeignKey("datasets.id", ondelete="CASCADE"), primary_key=True)
+    publication_id = Column(Integer, ForeignKey("publications.id", ondelete="CASCADE"), primary_key=True)
+    dataset_id = Column(Integer, ForeignKey("datasets.id", ondelete="CASCADE"), primary_key=True)
+
+class PublicationHasProject(Base):
+    __tablename__ = "publication_has_project"
+
+    publication_id = Column(Integer, ForeignKey("publications.id", ondelete="CASCADE"), primary_key=True)
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True)

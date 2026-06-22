@@ -45,3 +45,83 @@ def create_project_dataset_link(db: Session, link: schemas.ProjectDatasetCreate)
     db.commit()
     db.refresh(db_link)
     return db_link
+
+
+def create_publication(db: Session, pub: schemas.PublicationCreate):
+    db_publication = models.Publication(
+
+        paper_title=pub.paper_title,
+        authors=pub.authors,
+        year_of_publication=pub.year_of_publication,
+        paper_doi=pub.paper_doi,
+        journal_name=pub.journal_name,
+        abstract=pub.abstract,
+        url=pub.url,
+        team_id=pub.team_id
+    )
+    db.add(db_publication)
+    db.commit()
+    db.refresh(db_publication)
+    return db_publication
+
+
+def link_publication_to_project(db: Session, publication_id: str, project_id: str):
+    db_link = models.PublicationHasProject(
+        publication_id=publication_id,
+        project_id=project_id
+    )
+    db.add(db_link)
+    db.commit()
+    db.refresh(db_link)
+    return db_link
+def link_publication_to_dataset(db: Session, publication_id: str, dataset_id: str):
+    db_link = models.PublicationHasDataset(
+        publication_id=publication_id,
+        dataset_id=dataset_id
+    )
+    db.add(db_link)
+    db.commit()
+    db.refresh(db_link)
+    return db_link
+
+from sqlalchemy.orm import Session
+import models
+
+def get_publication(db: Session, publication_id: str):
+    return db.query(models.Publication).filter(models.Publication.id == publication_id).first()
+
+
+
+# --- Getters for validation ---
+def get_dataset(db: Session, dataset_id: int):
+    return db.query(models.Dataset).filter(models.Dataset.id == dataset_id).first()
+
+def get_project(db: Session, project_id: int):
+    return db.query(models.Project).filter(models.Project.id == project_id).first()
+
+# --- Link Creators ---
+def create_publication_dataset_link(db: Session, publication_id: int, dataset_id: int):
+    db_link = models.PublicationHasDataset(
+        publication_id=publication_id,
+        dataset_id=dataset_id
+    )
+    db.add(db_link)
+    db.commit()
+    db.refresh(db_link)
+    return db_link
+
+def create_publication_project_link(db: Session, publication_id: int, project_id: int):
+    db_link = models.PublicationHasProject(
+        publication_id=publication_id,
+        project_id=project_id
+    )
+    db.add(db_link)
+    db.commit()
+    db.refresh(db_link)
+    return db_link
+
+def get_publication_dataset_link(db: Session, publication_id: int, dataset_id: int):
+    return db.query(models.PublicationHasDataset).filter(
+        models.PublicationHasDataset.publication_id == publication_id,
+        models.PublicationHasDataset.dataset_id == dataset_id
+    ).first()
