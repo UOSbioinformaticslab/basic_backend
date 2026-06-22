@@ -1,1 +1,3 @@
-config.pycruk_datahub.db
+config.py
+cruk_datahub.db
+*.xml
