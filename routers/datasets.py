@@ -51,10 +51,7 @@ def search_datasets(
 
 @router.get("/list/simple", response_model=List[schemas.DatasetSimpleResponse])
 def get_simple_dataset_list(db: Session = Depends(database.get_db)):
-    """
-    Returns a lightweight list of all datasets containing only their ID,
-    datasetid, and extracted name.
-    """
+    # Query only the columns required to compute the property
     records = db.query(
         models.Dataset.id,
         models.Dataset.datasetid,
@@ -63,18 +60,16 @@ def get_simple_dataset_list(db: Session = Depends(database.get_db)):
 
     results = []
     for record in records:
-        name = "Untitled Dataset"
-
-        # Safely extract the title from the JSON blob if it exists
-        if record.metadata_blob and isinstance(record.metadata_blob, dict):
-            name = record.metadata_blob.get("summary", {}).get("title", name)
+        # Recreate the property logic manually since we are working with Row objects, not ORM models
+        title = f"Dataset {record.id}"
+        if isinstance(record.metadata_blob, dict):
+            title = record.metadata_blob.get("summary", {}).get("title", title)
 
         results.append({
             "id": record.id,
             "datasetid": record.datasetid,
-            "name": name
+            "computed_title": title
         })
-
     return results
 
 @router.post("/", response_model=schemas.DatasetResponse)

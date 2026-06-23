@@ -1,6 +1,6 @@
 # schemas.py
 from pydantic import BaseModel, EmailStr
-from typing import Optional, List, Any
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 
@@ -52,7 +52,7 @@ class DatasetResponse(DatasetBase):
 class DatasetSimpleResponse(BaseModel):
     id: int
     datasetid: Optional[str] = None
-    name: str
+    computed_title: str #this is drawn from the @property in models.py
 
     class Config:
         from_attributes = True
@@ -150,6 +150,8 @@ class PublicationCreate(PublicationBase):
 
 class Publication(PublicationBase):
     id: int
+    datasets: List[DatasetSimpleResponse] = []  # MUST be present
+    projects: List[ProjectResponse] = []  # MUST be present
 
     class Config:
         from_attributes = True # Use orm_mode = True if you are on Pydantic v1

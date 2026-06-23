@@ -1,5 +1,5 @@
 # crud.py
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 import models, schemas
 import uuid
 
@@ -87,9 +87,11 @@ def link_publication_to_dataset(db: Session, publication_id: str, dataset_id: st
 from sqlalchemy.orm import Session
 import models
 
-def get_publication(db: Session, publication_id: str):
-    return db.query(models.Publication).filter(models.Publication.id == publication_id).first()
-
+def get_publication(db: Session, publication_id: int):
+    return db.query(models.Publication).options(
+        selectinload(models.Publication.datasets),
+        selectinload(models.Publication.projects)
+    ).filter(models.Publication.id == publication_id).first()
 
 
 # --- Getters for validation ---

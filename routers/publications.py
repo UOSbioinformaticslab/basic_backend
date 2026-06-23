@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from typing import List
+from sqlalchemy.orm import Session, selectinload
 import httpx
 from datetime import datetime
 import uuid
@@ -16,6 +17,24 @@ router = APIRouter(
     tags=["Publications"]
 )
 
+
+@router.get("/", response_model=List[schemas.Publication])
+def read_all_publications(
+        skip: int = 0,
+        limit: int = 100,
+        db: Session = Depends(get_db)
+):
+    print("\n" + "=" * 40)
+    print("📥 RECEIVED GET: ALL PUBLICATIONS (PUBLIC)")
+    print("=" * 40 + "\n")
+
+    # Fetch publications and eager-load the linked collections
+    publications = db.query(models.Publication).options(
+        selectinload(models.Publication.datasets),
+        selectinload(models.Publication.projects)
+    ).offset(skip).limit(limit).all()
+
+    return publications
 
 @router.post("/from-doi", response_model=schemas.Publication)
 async def create_publication_from_doi(
@@ -108,12 +127,10 @@ async def create_publication_from_doi(
 @router.get("/{publication_id}", response_model=schemas.Publication)
 def read_publication(
         publication_id: int,
-        db: Session = Depends(get_db),
-        current_user: models.User = Depends(get_current_user)
+        db: Session = Depends(get_db)
     ):
     print("\n" + "=" * 40)
     print(f"📥 RECEIVED GET: PUBLICATION BY ID")
-    print(f"User: {current_user.name} (ID: {current_user.id})")
     print(f"Requested Publication ID: {publication_id}")
     print("=" * 40 + "\n")
 
@@ -166,11 +183,11 @@ def link_publication_to_dataset(
         )
         # ... previous validation checks ...
 
-        # Validation 3: Does this link already exist?
-        existing_link = crud.get_publication_dataset_link(db, publication_id, dataset_id)
-        if existing_link:
-            print("link already existed")
-            return existing_link
+    # Validation 3: Does this link already exist?
+    existing_link = crud.get_publication_dataset_link(db, publication_id, dataset_id)
+    if existing_link:
+        print("link already existed")
+        return existing_link
     try:
         new_link = crud.create_publication_dataset_link(db, publication_id, dataset_id)
         return new_link
@@ -180,7 +197,6 @@ def link_publication_to_dataset(
             status_code=500,
             detail=f"Failed to link publication to dataset: {str(e)}"
         )
-
 
 @router.post("/{publication_id}/projects/{project_id}", response_model=schemas.PublicationHasProject)
 def link_publication_to_project(
@@ -213,6 +229,8 @@ def link_publication_to_project(
             status_code=403,
             detail="User is not authorized to modify links for this publication's team."
         )
+    else:
+        print("user belongs to publication's team")
 
     # Validation 2: Do the publication and project share the same team?
     if pub.team_id != project.team_id:
@@ -220,6 +238,13 @@ def link_publication_to_project(
             status_code=400,
             detail="Team ID mismatch. Publication and Project must belong to the same team."
         )
+    else:
+        print("publication and project share the same team")
+
+    existing_link = crud.get_publication_project_link(db, publication_id, project_id)
+    if existing_link:
+        print("link exists")
+        return existing_link
 
     try:
         new_link = crud.create_publication_project_link(db, publication_id, project_id)
@@ -228,5 +253,5 @@ def link_publication_to_project(
         db.rollback()
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to link publication to project: {str(e)}"
+            detail=f"Failed to link publication to dataset: {str(e)}"
         )

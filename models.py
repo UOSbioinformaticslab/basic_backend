@@ -74,6 +74,13 @@ class Dataset(Base):
     project_datasets = relationship("ProjectDataset", back_populates="dataset")
     publications = relationship("Publication", secondary="publication_has_dataset", back_populates="datasets")
 
+    @property
+    def computed_title(self) -> str:
+        if isinstance(self.metadata_blob, dict):
+            summary = self.metadata_blob.get("summary", {})
+            if isinstance(summary, dict):
+                return summary.get("title", f"Dataset {self.id}")
+        return f"Dataset {self.id}"
 
 class Project(Base):
     __tablename__ = "projects"
