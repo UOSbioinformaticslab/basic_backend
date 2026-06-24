@@ -2,7 +2,7 @@
   "metadata_blob": {
     "version": "1.0.0",
     "summary": {
-      "title": "Bladder Cancer Prognosis Program (BCPP) Database",
+      "title": "BCPP Database",
       "abstract": "A large epidemiological prospective cohort study dataset encompassing 1,284 newly diagnosed bladder cancer patients and 252 non-bladder cancer controls from the UK[cite: 7]. The database integrates comprehensive baseline clinical and lifestyle data, over five years of median follow-up, and multi-omic profiling—including genomics, transcriptomics, proteomics, and digital pathology—derived from pre-treatment tumour, blood, and urine samples[cite: 7].",
       "dataCustodian": {
         "name": "Cancer Research Horizons",
