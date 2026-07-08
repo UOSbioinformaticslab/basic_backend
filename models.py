@@ -94,13 +94,13 @@ class Project(Base):
     # Specific columns to match the HDRUK/PHP $fillable structure
     pid = Column(String, unique=True, index=True)
     version = Column(String)
-    projectGrantName = Column(String)
-    leadResearcher = Column(String)
-    leadResearchInstitute = Column(String)
-    grantNumbers = Column(String)
-    projectGrantStartDate = Column(String)  # Stored as string for frontend flexibility
-    projectGrantEndDate = Column(String)
-    projectGrantScope = Column(String)
+    project_grant_name = Column(String)
+    lead_researcher = Column(String)
+    lead_research_institute = Column(String)
+    grant_numbers = Column(String)
+    project_grant_start_date = Column(String)  # Stored as string for frontend flexibility
+    project_grant_end_date = Column(String)
+    project_grant_scope = Column(String)
 
     # Metadata blob for catch-all React form storage
     metadata_blob = Column(JSON)

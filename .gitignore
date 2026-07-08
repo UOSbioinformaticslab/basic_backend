@@ -1,2 +1,6 @@
-config.py
 cruk_datahub.db
+text
+.venv/
+env/
+__pycache__/
+.env/

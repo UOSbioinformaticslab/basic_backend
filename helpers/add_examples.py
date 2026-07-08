@@ -6,7 +6,7 @@ from config import SWOOLLER_PASSWORD
 # Update this once you verify the URL in your docs
 API_URL = "http://localhost:8000/datasets"
 TOKEN_URL = "http://127.0.0.1:8000/token"
-EXAMPLES_DIR = "examples"
+EXAMPLES_DIR = "../examples"
 
 
 def get_auth_token():

@@ -7,6 +7,7 @@ import crud
 import models
 from database import get_db
 from dependencies import get_current_user
+import traceback
 
 router = APIRouter(
     prefix="/publications",
@@ -32,19 +33,39 @@ def read_all_publications(
 
     return publications
 
+@router.delete("/{publication_id}")
+def delete_publication(
+        publication_id: int,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    db_publication = db.query(models.Publication).filter(models.Publication.id == publication_id).first()
+
+    if not db_publication:
+        raise HTTPException(status_code=404, detail="Publication not found")
+
+    try:
+        db.delete(db_publication)
+        db.commit()
+        return {"message": "Publication successfully deleted"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to delete publication: {str(e)}"
+        )
+
+
 @router.post("/from-doi", response_model=schemas.Publication)
 async def create_publication_from_doi(
         request: schemas.DOICreateRequest,
         db: Session = Depends(get_db),
         current_user: models.User = Depends(get_current_user)
 ):
-    # --- NEW LOGGING ---
     print("\n" + "=" * 40)
-    print(f"📥 RECEIVED POST: PUBLICATION FROM DOI")
+    print(f"踏 RECEIVED POST: PUBLICATION FROM DOI")
     print(f"User: {current_user.name} (ID: {current_user.id})")
 
-    # Check both the token context and the payload context
-    # Check both the token context and the payload context
     payload_team_id = request.team_id
     user_team_ids = [team.id for team in current_user.teams]
 
@@ -52,11 +73,9 @@ async def create_publication_from_doi(
     print(f"User's Authorized Team IDs: {user_team_ids}")
     print("=" * 40 + "\n")
 
-    # Determine the target team
     if payload_team_id:
         target_team_id = payload_team_id
     elif len(user_team_ids) == 1:
-        # Fallback: If no payload ID is provided but user only has one team, use it
         target_team_id = user_team_ids[0]
     else:
         target_team_id = None
@@ -67,13 +86,25 @@ async def create_publication_from_doi(
             detail="Missing Team ID. User belongs to multiple teams, please specify one."
         )
 
-    # Security check: ensure the user actually belongs to the team they are posting to
     if target_team_id not in user_team_ids:
         raise HTTPException(
             status_code=403,
             detail="User is not authorized to post publications for this team."
         )
-    # Fetch Crossref metadata
+
+    # -------------------------------------------------------------------
+    # Check if publication already exists in the database
+    # -------------------------------------------------------------------
+    existing_publication = db.query(models.Publication).filter(models.Publication.paper_doi == request.doi).first()
+
+    if existing_publication:
+        print(f"DOI {request.doi} already exists in DB. Returning existing publication.")
+        return existing_publication
+
+    # -------------------------------------------------------------------
+    # Proceed to fetch from Crossref if it does not exist
+    # -------------------------------------------------------------------
+    print("Fetching request from crossref")
     url = f"https://api.crossref.org/works/{request.doi}"
 
     async with httpx.AsyncClient() as client:
@@ -83,10 +114,16 @@ async def create_publication_from_doi(
         raise HTTPException(status_code=404, detail="DOI not found or external API error.")
 
     data = response.json().get("message", {})
+    print("Got data from Crossref")
 
-    # Map the Crossref metadata
     title = data.get("title", [""])[0] if data.get("title") else "Unknown Title"
-    authors = data.get("author", [])
+    author_dict = data.get("author", [])
+    if author_dict:
+        authors = [f"{author.get('family', author.get('name', ''))}, {author.get('given', '')}".strip(", ") for author in author_dict]
+    else:
+        authors = []
+    print(type(authors[0]))
+
 
     published_info = data.get("published-print") or data.get("published-online") or {}
     date_parts = published_info.get("date-parts", [[]])[0]
@@ -95,13 +132,13 @@ async def create_publication_from_doi(
     journal = data.get("container-title", [""])[0] if data.get("container-title") else "Unknown Journal"
     abstract = data.get("abstract", None)
     paper_url = data.get("URL", f"https://doi.org/{request.doi}")
+    paper_doi = data.get("DOI", request.doi)
 
-    # Prepare the data
     pub_create_data = schemas.PublicationCreate(
         paper_title=title,
         authors=authors,
         year_of_publication=year,
-        paper_doi=data.get("DOI", request.doi),
+        paper_doi=paper_doi,
         journal_name=journal,
         abstract=abstract,
         url=paper_url,
@@ -109,7 +146,6 @@ async def create_publication_from_doi(
     )
 
     try:
-        # Pass the validated target_team_id through to your CRUD function
         new_publication = crud.create_publication(db=db, pub=pub_create_data)
         return new_publication
     except Exception as e:
@@ -118,7 +154,6 @@ async def create_publication_from_doi(
             status_code=500,
             detail=f"Failed to save publication: {str(e)}"
         )
-
 
 @router.get("/{publication_id}", response_model=schemas.Publication)
 def read_publication(

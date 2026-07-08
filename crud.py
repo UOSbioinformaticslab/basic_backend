@@ -28,7 +28,7 @@ def create_project(db: Session, project: schemas.ProjectCreate, user_id: int, te
         project_data["pid"] = f"PRJ-{uuid.uuid4().hex[:8].upper()}"
 
     # **project_data now automatically populates the 11 explicit columns
-    # (projectGrantName, leadResearcher, etc.) defined in models.py
+    # (project_grant_name, lead_researcher, etc.) defined in models.py
     db_project = models.Project(
         **project_data
 

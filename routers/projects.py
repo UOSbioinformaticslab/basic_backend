@@ -21,7 +21,7 @@ def save_project(
             detail="No active team selected. Please select a team from the User Menu before saving."
         )
 
-    # 2. Call the CRUD function to map the 11 fields (pid, projectGrantName, etc.)
+    # 2. Call the CRUD function to map the 11 fields (pid, project_grant_name, etc.)
     # and the authenticated user_id to the database.
     return crud.create_project(
         db=db,
