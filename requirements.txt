@@ -11,3 +11,9 @@ python-dotenv==1.0.1
 pydantic[email]
 bcrypt==4.0.1
 httpx
+google-genai
+PyPDF2
+python-docx
+python-pptx
+openpyxl
+xlrd

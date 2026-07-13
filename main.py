@@ -1,14 +1,13 @@
 # main.py
 from fastapi import FastAPI
 from database import engine, Base
-from routers import snomed_filters, publications, datasets, projects, admin, auth_router # Rename to avoid conflict with auth.py
+from routers import snomed_filters, publications, datasets, projects, admin, auth_router, ai_extract
 from fastapi.middleware.cors import CORSMiddleware
 
 # Create tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="CRUK Datahub")
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -19,12 +18,12 @@ app.add_middleware(
 )
 
 # Add the new auth router for the /token endpoint
-app.include_router(auth_router.router)
 app.include_router(datasets.router)
 app.include_router(projects.router)
 app.include_router(admin.router)
 app.include_router(snomed_filters.router)
 app.include_router(publications.router)
+app.include_router(ai_extract.router)
 
 @app.get("/")
 def health_check():
