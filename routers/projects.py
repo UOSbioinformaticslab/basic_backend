@@ -21,6 +21,10 @@ def save_project(
             detail="No active team selected. Please select a team from the User Menu before saving."
         )
 
+    user_team_ids = [team.id for team in current_user.teams]
+    if project_in.team_id not in user_team_ids:
+        raise HTTPException(status_code=403, detail="User is not a member of the specified team")
+
     # 2. Call the CRUD function to map the 11 fields (pid, project_grant_name, etc.)
     # and the authenticated user_id to the database.
     return crud.create_project(
@@ -45,6 +49,11 @@ def update_project(
         raise HTTPException(status_code=404, detail="Project not found")
 
     # 2. Update the fields dynamically
+    if project_in.team_id:
+        user_team_ids = [team.id for team in current_user.teams]
+        if project_in.team_id not in user_team_ids:
+            raise HTTPException(status_code=403, detail="User is not a member of the specified team")
+
     # exclude_unset=True ensures we only update fields that were actually sent in the payload
     update_data = project_in.dict(exclude_unset=True)
     for key, value in update_data.items():

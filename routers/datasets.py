@@ -87,16 +87,19 @@ def save_metadata_progress(
     # Check both the token context and the payload context
     payload_team_id = dataset_in.team_id
     print(f"Team ID from Frontend Payload: {payload_team_id}")
-    print(f"Team ID from User Profile: {current_user.team_id}")
     print("="*40 + "\n")
 
     unique_ds_id = f"DS-{uuid.uuid4().hex[:8].upper()}"
 
     # Use the payload_team_id to ensure we don't save 'None'
-    target_team_id = payload_team_id or current_user.team_id
+    target_team_id = payload_team_id
 
     if not target_team_id:
         raise HTTPException(status_code=400, detail="Missing Team ID context")
+
+    user_team_ids = [team.id for team in current_user.teams]
+    if target_team_id not in user_team_ids:
+        raise HTTPException(status_code=403, detail="User is not a member of the specified team")
 
     # 2. Map the React metadata_blob to the SQL model
     db_dataset = models.Dataset(
@@ -137,8 +140,13 @@ def update_metadata_progress(
         raise HTTPException(status_code=404, detail="Dataset not found")
 
     # 2. Update the fields with the incoming data
+    if dataset_in.team_id:
+        user_team_ids = [team.id for team in current_user.teams]
+        if dataset_in.team_id not in user_team_ids:
+            raise HTTPException(status_code=403, detail="User is not a member of the specified team")
+        db_dataset.team_id = dataset_in.team_id
+
     db_dataset.metadata_blob = dataset_in.metadata_blob
-    db_dataset.team_id = dataset_in.team_id
 
     # If your model/schema tracks status (like "DRAFT"), update it as well
     if hasattr(dataset_in, 'status') and dataset_in.status:

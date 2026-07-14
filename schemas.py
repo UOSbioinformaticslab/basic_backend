@@ -70,14 +70,12 @@ class UserCreate(BaseModel):
     email: EmailStr
     name: str
     password: str
-    team_id: int
 
 
 class UserResponse(BaseModel):
     id: int
     email: str
     name: Optional[str]
-    team_id: int
 
     class Config:
         from_attributes = True

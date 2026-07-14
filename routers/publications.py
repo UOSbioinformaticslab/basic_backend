@@ -56,97 +56,32 @@ def delete_publication(
         )
 
 
-@router.post("/from-doi", response_model=schemas.Publication)
-async def create_publication_from_doi(
-        request: schemas.DOICreateRequest,
+@router.post("/", response_model=schemas.Publication)
+def create_publication(
+        pub: schemas.PublicationCreate,
         db: Session = Depends(get_db),
         current_user: models.User = Depends(get_current_user)
 ):
     print("\n" + "=" * 40)
-    print(f"踏 RECEIVED POST: PUBLICATION FROM DOI")
+    print(f"📥 RECEIVED POST: CREATE PUBLICATION")
     print(f"User: {current_user.name} (ID: {current_user.id})")
-
-    payload_team_id = request.team_id
+    
+    # Optional team check based on the payload team_id vs user teams
     user_team_ids = [team.id for team in current_user.teams]
-
-    print(f"Team ID from Frontend Payload: {payload_team_id}")
-    print(f"User's Authorized Team IDs: {user_team_ids}")
-    print("=" * 40 + "\n")
-
-    if payload_team_id:
-        target_team_id = payload_team_id
-    elif len(user_team_ids) == 1:
-        target_team_id = user_team_ids[0]
-    else:
-        target_team_id = None
-
-    if not target_team_id:
-        raise HTTPException(
-            status_code=400,
-            detail="Missing Team ID. User belongs to multiple teams, please specify one."
-        )
-
-    if target_team_id not in user_team_ids:
+    if pub.team_id not in user_team_ids:
         raise HTTPException(
             status_code=403,
-            detail="User is not authorized to post publications for this team."
+            detail="User is not authorized to create a publication for this team."
         )
 
-    # -------------------------------------------------------------------
-    # Check if publication already exists in the database
-    # -------------------------------------------------------------------
-    existing_publication = db.query(models.Publication).filter(models.Publication.paper_doi == request.doi).first()
-
-    if existing_publication:
-        print(f"DOI {request.doi} already exists in DB. Returning existing publication.")
-        return existing_publication
-
-    # -------------------------------------------------------------------
-    # Proceed to fetch from Crossref if it does not exist
-    # -------------------------------------------------------------------
-    print("Fetching request from crossref")
-    url = f"https://api.crossref.org/works/{request.doi}"
-
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url)
-
-    if response.status_code != 200:
-        raise HTTPException(status_code=404, detail="DOI not found or external API error.")
-
-    data = response.json().get("message", {})
-    print("Got data from Crossref")
-
-    title = data.get("title", [""])[0] if data.get("title") else "Unknown Title"
-    author_dict = data.get("author", [])
-    if author_dict:
-        authors = [f"{author.get('family', author.get('name', ''))}, {author.get('given', '')}".strip(", ") for author in author_dict]
-    else:
-        authors = []
-    print(type(authors[0]))
-
-
-    published_info = data.get("published-print") or data.get("published-online") or {}
-    date_parts = published_info.get("date-parts", [[]])[0]
-    year = str(date_parts[0]) if date_parts else "Unknown"
-
-    journal = data.get("container-title", [""])[0] if data.get("container-title") else "Unknown Journal"
-    abstract = data.get("abstract", None)
-    paper_url = data.get("URL", f"https://doi.org/{request.doi}")
-    paper_doi = data.get("DOI", request.doi)
-
-    pub_create_data = schemas.PublicationCreate(
-        paper_title=title,
-        authors=authors,
-        year_of_publication=year,
-        paper_doi=paper_doi,
-        journal_name=journal,
-        abstract=abstract,
-        url=paper_url,
-        team_id=target_team_id
-    )
+    # Check if publication already exists by DOI
+    if pub.paper_doi:
+        existing = db.query(models.Publication).filter(models.Publication.paper_doi == pub.paper_doi).first()
+        if existing:
+            return existing
 
     try:
-        new_publication = crud.create_publication(db=db, pub=pub_create_data)
+        new_publication = crud.create_publication(db=db, pub=pub)
         return new_publication
     except Exception as e:
         db.rollback()

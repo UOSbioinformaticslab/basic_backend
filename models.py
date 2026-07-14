@@ -46,7 +46,6 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     name = Column(String)
     hashed_password = Column(String)  # For secure storage
-    team_id = Column(Integer, ForeignKey("teams.id"))
 
     # Relationships to easily access team, dataset, and project data
     teams = relationship("Team", secondary=user_teams, back_populates="members")

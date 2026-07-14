@@ -1,7 +1,7 @@
 # main.py
 from fastapi import FastAPI
 from database import engine, Base
-from routers import snomed_filters, publications, datasets, projects, admin, auth_router, ai_extract
+from routers import snomed_filters, publications, datasets, projects, admin, auth_router
 from fastapi.middleware.cors import CORSMiddleware
 
 # Create tables
@@ -11,7 +11,7 @@ app = FastAPI(title="CRUK Datahub")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "https://crukdatahublandingpage-production.up.railway.app","https://crukdatahublandingpage-staging.up.railway.app"], # Your React URL
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "https://crukdatahub-production.up.railway.app","https://crukdatahub-staging.up.railway.app"], # can be contacted by the frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -24,7 +24,6 @@ app.include_router(projects.router)
 app.include_router(admin.router)
 app.include_router(snomed_filters.router)
 app.include_router(publications.router)
-app.include_router(ai_extract.router)
 
 @app.get("/")
 def health_check():
