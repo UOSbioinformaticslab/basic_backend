@@ -46,6 +46,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     name = Column(String)
     hashed_password = Column(String)  # For secure storage
+    is_admin = Column(Boolean, default=False)
 
     # Relationships to easily access team, dataset, and project data
     teams = relationship("Team", secondary=user_teams, back_populates="members")
@@ -62,7 +63,9 @@ class Dataset(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     datasetid = Column(String, unique=True)  # e.g. CRUK_001
-    metadata_blob = Column(JSON)  # The actual React form data
+    metadata_blob = Column(JSON)  # The live/active React form data
+    draft_metadata_blob = Column(JSON, nullable=True)  # Working draft edits
+    active = Column(Boolean, default=False)  # True = Active/Published, False = Draft
     status = Column(String, default="DRAFT")
     user_id = Column(Integer, ForeignKey("users.id"))
     team_id = Column(Integer, ForeignKey("teams.id"))

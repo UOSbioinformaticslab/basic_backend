@@ -4,6 +4,11 @@ from database import engine, Base
 from routers import snomed_filters, publications, datasets, projects, admin, auth_router
 from fastapi.middleware.cors import CORSMiddleware
 
+from migrate_db import migrate
+
+# Run database schema migrations if needed
+migrate()
+
 # Create tables
 Base.metadata.create_all(bind=engine)
 
@@ -11,7 +16,12 @@ app = FastAPI(title="CRUK Datahub")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "https://crukdatahub-production.up.railway.app","https://crukdatahub-staging.up.railway.app"], # can be contacted by the frontend
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://crukdatahub-production.up.railway.app",
+        "https://crukdatahub-staging.up.railway.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

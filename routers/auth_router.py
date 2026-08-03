@@ -31,6 +31,7 @@ def login_for_access_token(
             "id": user.id,
             "name": user.name,
             "email": user.email,
+            "is_admin": bool(getattr(user, 'is_admin', False)),
             "teams": [{"id": t.id, "name": t.name} for t in user.teams]
         }
     }

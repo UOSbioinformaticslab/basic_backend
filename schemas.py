@@ -32,8 +32,11 @@ class LookupRequest(BaseModel):
 # --- Dataset Schemas (Unchanged - Keeping datasetid flatcase) ---
 class DatasetBase(BaseModel):
     metadata_blob: dict
+    draft_metadata_blob: Optional[dict] = None
+    active: Optional[bool] = False
     team_id: Optional[int] = None
     status: Optional[str] = "DRAFT"
+    unpublish: Optional[bool] = False
 
 
 class DatasetCreate(DatasetBase):
@@ -44,6 +47,8 @@ class DatasetCreate(DatasetBase):
 class DatasetResponse(DatasetBase):
     id: int
     datasetid: str
+    active: bool = False
+    has_draft: bool = False
     created_at: datetime
 
     class Config:
@@ -53,6 +58,8 @@ class DatasetSimpleResponse(BaseModel):
     id: int
     datasetid: Optional[str] = None
     computed_title: str #this is drawn from the @property in models.py
+    active: bool = False
+    has_draft: bool = False
 
     class Config:
         from_attributes = True
