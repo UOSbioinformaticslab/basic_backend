@@ -64,7 +64,7 @@ def create_user(user_in: schemas.UserCreate, db: Session = Depends(database.get_
 def list_users(db: Session = Depends(database.get_db)):
     users = db.query(models.User).all()
     # Manual conversion to see what's actually coming back
-    return [{"email": u.email, "name": u.name, "teams": [t.id for t in u.teams]} for u in users]
+    return [{"id": u.id, "email": u.email, "name": u.name, "is_admin": u.is_admin, "teams": [t.id for t in u.teams]} for u in users]
 
 @router.post("/users/{user_id}/teams/{team_id}", response_model=schemas.UserResponse)
 def add_user_to_team(user_id: int, team_id: int, db: Session = Depends(database.get_db)):
@@ -87,3 +87,61 @@ def add_user_to_team(user_id: int, team_id: int, db: Session = Depends(database.
     db.refresh(user)
 
     return user
+
+from pydantic import BaseModel
+
+class AdminUpdate(BaseModel):
+    is_admin: bool
+
+class PasswordUpdate(BaseModel):
+    new_password: str
+
+@router.put("/users/{user_id}/admin")
+def toggle_admin(user_id: int, payload: AdminUpdate, db: Session = Depends(database.get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.is_admin = payload.is_admin
+    db.commit()
+    return {"message": "Admin status updated"}
+
+@router.delete("/users/{user_id}")
+def delete_user(user_id: int, db: Session = Depends(database.get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    db.delete(user)
+    db.commit()
+    return {"message": "User deleted"}
+
+@router.put("/users/{user_id}/password")
+def change_password(user_id: int, payload: PasswordUpdate, db: Session = Depends(database.get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.hashed_password = auth.get_password_hash(payload.new_password)
+    db.commit()
+    return {"message": "Password changed"}
+
+@router.delete("/teams/{team_id}")
+def delete_team(team_id: int, delete_projects: bool = False, db: Session = Depends(database.get_db)):
+    team = db.query(models.Team).filter(models.Team.id == team_id).first()
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    if delete_projects:
+        # Assuming cascading deletes or manual deletes here if needed
+        pass
+    db.delete(team)
+    db.commit()
+    return {"message": "Team deleted"}
+
+@router.delete("/users/{user_id}/teams/{team_id}")
+def remove_user_from_team(user_id: int, team_id: int, db: Session = Depends(database.get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    team = db.query(models.Team).filter(models.Team.id == team_id).first()
+    if team in user.teams:
+        user.teams.remove(team)
+        db.commit()
+    return {"message": "User removed from team"}

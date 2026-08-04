@@ -11,7 +11,9 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES"))
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 SWOOLLER_PASSWORD = os.environ.get("SWOOLLER_PASSWORD")
 DATABASE_PUBLIC_URL = os.environ.get("DATABASE_PUBLIC_URL")
-DATABASE_URL = os.environ.get("DATABASE_URL")
+DATABASE_URL = os.environ.get("DATABASE_URL") or DATABASE_PUBLIC_URL
+
+# SQLAlchemy 1.4+ removed support for "postgres://", requires "postgresql://"
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
