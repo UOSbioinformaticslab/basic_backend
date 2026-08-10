@@ -113,8 +113,8 @@ class ProjectCreate(ProjectBase):
 class ProjectResponse(ProjectBase):
     id: int  # The internal database row number
     status: str
-    user_id: int
-    team_id: int
+    user_id: Optional[int] = None
+    team_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
 
