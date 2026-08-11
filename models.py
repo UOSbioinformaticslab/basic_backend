@@ -10,6 +10,7 @@ user_teams = Table(
     Base.metadata,
     Column("user_id", Integer, ForeignKey("users.id"), primary_key=True),
     Column("team_id", Integer, ForeignKey("teams.id"), primary_key=True),
+    Column("is_team_admin", Boolean, default=False),
 )
 
 class ProjectDataset(Base):
@@ -36,6 +37,7 @@ class Team(Base):
     __tablename__ = "teams"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
+    notification_email = Column(String, nullable=True)
     datasets = relationship("Dataset", back_populates="team")
     members = relationship("User", secondary=user_teams, back_populates="teams")
     projects = relationship("Project", back_populates="team")
@@ -47,6 +49,7 @@ class TeamInvitation(Base):
     team_id = Column(Integer, ForeignKey("teams.id"))
     email = Column(String, index=True)
     status = Column(String, default="PENDING") # PENDING, ACCEPTED, REJECTED
+    is_admin = Column(Boolean, default=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     team = relationship("Team", back_populates="invitations")
@@ -58,11 +61,27 @@ class User(Base):
     name = Column(String)
     hashed_password = Column(String)  # For secure storage
     is_admin = Column(Boolean, default=False)
+    applicant_organisation = Column(String)
 
     # Relationships to easily access team, dataset, and project data
     teams = relationship("Team", secondary=user_teams, back_populates="members")
     datasets = relationship("Dataset", back_populates="user")
     projects = relationship("Project", back_populates="user")
+    enquiries = relationship("DataCustodianEnquiry", back_populates="user")
+
+class DataCustodianEnquiry(Base):
+    __tablename__ = "data_custodian_enquiries"
+    id = Column(Integer, primary_key=True, index=True)
+    team_id = Column(Integer, ForeignKey("teams.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
+    dataset_name = Column(String, nullable=True)
+    contact_number = Column(String, nullable=True)
+    enquiry_text = Column(String)
+    consent_given = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    team = relationship("Team")
+    user = relationship("User", back_populates="enquiries")
 
 
 class Dataset(Base):

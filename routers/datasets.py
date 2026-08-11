@@ -22,6 +22,7 @@ def build_dataset_response(db_dataset: models.Dataset, use_draft: bool = False) 
         "metadata_blob": blob or {},
         "draft_metadata_blob": db_dataset.draft_metadata_blob,
         "team_id": db_dataset.team_id,
+        "team_name": db_dataset.team.name if db_dataset.team else None,
         "status": db_dataset.status,
         "active": bool(db_dataset.active),
         "has_draft": db_dataset.draft_metadata_blob is not None,

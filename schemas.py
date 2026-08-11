@@ -50,6 +50,7 @@ class DatasetResponse(DatasetBase):
     active: bool = False
     has_draft: bool = False
     created_at: datetime
+    team_name: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -68,18 +69,21 @@ class DatasetSimpleResponse(BaseModel):
 class TeamResponse(BaseModel):
     id: int
     name: str
+    notification_email: Optional[str] = None
 
     class Config:
         from_attributes = True
 
 class TeamInvitationCreate(BaseModel):
     email: str
+    is_admin: bool = False
 
 class TeamInvitationResponse(BaseModel):
     id: int
     team_id: int
     email: str
     status: str
+    is_admin: bool = False
     team: Optional[TeamResponse] = None
 
     class Config:
@@ -89,16 +93,38 @@ class UserCreate(BaseModel):
     email: EmailStr
     name: str
     password: str
+    applicant_organisation: Optional[str] = "University of Sussex"
 
 
 class UserResponse(BaseModel):
     id: int
     email: str
     name: Optional[str]
+    applicant_organisation: Optional[str] = None
 
     class Config:
         from_attributes = True
 
+# --- ENQUIRIES ---
+
+class EnquiryCreate(BaseModel):
+    contact_number: Optional[str] = None
+    dataset_name: Optional[str] = None
+    enquiry_text: str
+    consent_given: bool
+
+class EnquiryResponse(BaseModel):
+    id: int
+    team_id: int
+    user_id: int
+    dataset_name: Optional[str] = None
+    contact_number: Optional[str] = None
+    enquiry_text: str
+    consent_given: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 # --- Project Schemas (Updated for HDRUK/PHP Alignment) ---
 class ProjectBase(BaseModel):

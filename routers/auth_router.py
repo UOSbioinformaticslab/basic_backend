@@ -20,6 +20,10 @@ def login_for_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    # Query the association table directly to get the team roles
+    user_team_links = db.query(models.user_teams).filter_by(user_id=user.id).all()
+    team_admin_map = {link.team_id: link.is_team_admin for link in user_team_links}
+
     # Include both user and team context in the token
     access_token = auth.create_access_token(
         data={"sub": user.email, "user_id": user.id}
@@ -31,7 +35,8 @@ def login_for_access_token(
             "id": user.id,
             "name": user.name,
             "email": user.email,
+            "applicant_organisation": user.applicant_organisation,
             "is_admin": bool(getattr(user, 'is_admin', False)),
-            "teams": [{"id": t.id, "name": t.name} for t in user.teams]
+            "teams": [{"id": t.id, "name": t.name, "is_team_admin": team_admin_map.get(t.id, False)} for t in user.teams]
         }
     }

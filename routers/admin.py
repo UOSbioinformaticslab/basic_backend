@@ -149,3 +149,45 @@ def remove_user_from_team(user_id: int, team_id: int, db: Session = Depends(data
 @router.get("/invitations", response_model=List[schemas.TeamInvitationResponse])
 def get_all_invitations(db: Session = Depends(database.get_db)):
     return db.query(models.TeamInvitation).all()
+
+@router.get("/user_team_links")
+def get_user_team_links(db: Session = Depends(database.get_db)):
+    # Query the association table directly
+    links = db.query(models.user_teams).all()
+    return [{"user_id": link.user_id, "team_id": link.team_id, "is_team_admin": link.is_team_admin} for link in links]
+
+@router.put("/users/{user_id}/teams/{team_id}/admin")
+def toggle_team_admin(user_id: int, team_id: int, payload: AdminUpdate, db: Session = Depends(database.get_db)):
+    # Update the association table directly
+    stmt = (
+        models.user_teams.update()
+        .where(
+            (models.user_teams.c.user_id == user_id) & 
+            (models.user_teams.c.team_id == team_id)
+        )
+        .values(is_team_admin=payload.is_admin)
+    )
+    result = db.execute(stmt)
+    if result.rowcount == 0:
+        raise HTTPException(status_code=404, detail="User-Team link not found")
+    db.commit()
+    return {"message": "Team Admin status updated"}
+
+@router.get("/enquiries")
+def get_all_enquiries(db: Session = Depends(database.get_db)):
+    enquiries = db.query(models.DataCustodianEnquiry).order_by(models.DataCustodianEnquiry.created_at.desc()).all()
+    results = []
+    for enq in enquiries:
+        results.append({
+            "id": enq.id,
+            "team_id": enq.team_id,
+            "team_name": enq.team.name if enq.team else "Unknown",
+            "dataset_name": enq.dataset_name,
+            "enquiry_text": enq.enquiry_text,
+            "created_at": enq.created_at,
+            "applicant_name": enq.user.name if enq.user else "Unknown",
+            "applicant_email": enq.user.email if enq.user else "Unknown",
+            "applicant_organisation": enq.user.applicant_organisation if enq.user else "Unknown",
+            "contact_number": enq.contact_number
+        })
+    return results
