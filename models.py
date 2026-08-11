@@ -39,6 +39,17 @@ class Team(Base):
     datasets = relationship("Dataset", back_populates="team")
     members = relationship("User", secondary=user_teams, back_populates="teams")
     projects = relationship("Project", back_populates="team")
+    invitations = relationship("TeamInvitation", back_populates="team", cascade="all, delete-orphan")
+
+class TeamInvitation(Base):
+    __tablename__ = "team_invitations"
+    id = Column(Integer, primary_key=True, index=True)
+    team_id = Column(Integer, ForeignKey("teams.id"))
+    email = Column(String, index=True)
+    status = Column(String, default="PENDING") # PENDING, ACCEPTED, REJECTED
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    team = relationship("Team", back_populates="invitations")
 
 class User(Base):
     __tablename__ = "users"

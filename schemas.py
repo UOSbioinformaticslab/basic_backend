@@ -72,6 +72,18 @@ class TeamResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class TeamInvitationCreate(BaseModel):
+    email: str
+
+class TeamInvitationResponse(BaseModel):
+    id: int
+    team_id: int
+    email: str
+    status: str
+    team: Optional[TeamResponse] = None
+
+    class Config:
+        from_attributes = True
 
 class UserCreate(BaseModel):
     email: EmailStr

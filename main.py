@@ -1,7 +1,7 @@
 # main.py
 from fastapi import FastAPI
 from database import engine, Base
-from routers import snomed_filters, publications, datasets, projects, admin, auth_router
+from routers import snomed_filters, publications, datasets, projects, admin, auth_router, teams_router
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import Request, BackgroundTasks
 from fastapi.responses import JSONResponse
@@ -81,6 +81,7 @@ app.include_router(projects.router)
 app.include_router(admin.router)
 app.include_router(snomed_filters.router)
 app.include_router(publications.router)
+app.include_router(teams_router.router)
 
 @app.get("/")
 def health_check():

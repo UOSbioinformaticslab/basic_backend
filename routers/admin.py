@@ -145,3 +145,7 @@ def remove_user_from_team(user_id: int, team_id: int, db: Session = Depends(data
         user.teams.remove(team)
         db.commit()
     return {"message": "User removed from team"}
+
+@router.get("/invitations", response_model=List[schemas.TeamInvitationResponse])
+def get_all_invitations(db: Session = Depends(database.get_db)):
+    return db.query(models.TeamInvitation).all()
