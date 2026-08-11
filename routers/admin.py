@@ -40,27 +40,19 @@ def list_teams(db: Session = Depends(database.get_db)):
 @router.post("/users", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(user_in: schemas.UserCreate, db: Session = Depends(database.get_db)):
     """
-    Creates a user, assigns their primary team_id, AND appends the team
-    to the many-to-many relationship list for the frontend.
+    Creates a user and optionally appends an initial team
+    to the many-to-many relationship list.
     """
     existing_user = db.query(models.User).filter(models.User.email == user_in.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    team = db.query(models.Team).filter(models.Team.id == user_in.team_id).first()
-    if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
-
     hashed_pwd = auth.get_password_hash(user_in.password)
     db_user = models.User(
         email=user_in.email,
         name=user_in.name,
-        hashed_password=hashed_pwd,
-        team_id=user_in.team_id  # Keeps your SQL foreign key intact
+        hashed_password=hashed_pwd
     )
-
-    # THE FIX: Append the team object to the relationship list
-    db_user.teams.append(team)
 
     db.add(db_user)
     db.commit()
@@ -72,10 +64,13 @@ def create_user(user_in: schemas.UserCreate, db: Session = Depends(database.get_
 def list_users(db: Session = Depends(database.get_db)):
     users = db.query(models.User).all()
     # Manual conversion to see what's actually coming back
-    return [{"email": u.email, "name": u.name, "team": u.team_id} for u in users]
+    return [{"id": u.id, "email": u.email, "name": u.name, "is_admin": u.is_admin, "teams": [t.id for t in u.teams]} for u in users]
 
-@router.put("/users/{user_id}/primary-team/{team_id}", response_model=schemas.UserResponse)
-def update_user_primary_team(user_id: int, team_id: int, db: Session = Depends(database.get_db)):
+@router.post("/users/{user_id}/teams/{team_id}", response_model=schemas.UserResponse)
+def add_user_to_team(user_id: int, team_id: int, db: Session = Depends(database.get_db)):
+    """
+    Associates an existing user with an additional team.
+    """
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -84,8 +79,69 @@ def update_user_primary_team(user_id: int, team_id: int, db: Session = Depends(d
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
 
-    user.team_id = team_id
+    if team in user.teams:
+        raise HTTPException(status_code=400, detail="User is already in this team")
+
+    user.teams.append(team)
     db.commit()
     db.refresh(user)
 
     return user
+
+from pydantic import BaseModel
+
+class AdminUpdate(BaseModel):
+    is_admin: bool
+
+class PasswordUpdate(BaseModel):
+    new_password: str
+
+@router.put("/users/{user_id}/admin")
+def toggle_admin(user_id: int, payload: AdminUpdate, db: Session = Depends(database.get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.is_admin = payload.is_admin
+    db.commit()
+    return {"message": "Admin status updated"}
+
+@router.delete("/users/{user_id}")
+def delete_user(user_id: int, db: Session = Depends(database.get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    db.delete(user)
+    db.commit()
+    return {"message": "User deleted"}
+
+@router.put("/users/{user_id}/password")
+def change_password(user_id: int, payload: PasswordUpdate, db: Session = Depends(database.get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.hashed_password = auth.get_password_hash(payload.new_password)
+    db.commit()
+    return {"message": "Password changed"}
+
+@router.delete("/teams/{team_id}")
+def delete_team(team_id: int, delete_projects: bool = False, db: Session = Depends(database.get_db)):
+    team = db.query(models.Team).filter(models.Team.id == team_id).first()
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    if delete_projects:
+        # Assuming cascading deletes or manual deletes here if needed
+        pass
+    db.delete(team)
+    db.commit()
+    return {"message": "Team deleted"}
+
+@router.delete("/users/{user_id}/teams/{team_id}")
+def remove_user_from_team(user_id: int, team_id: int, db: Session = Depends(database.get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    team = db.query(models.Team).filter(models.Team.id == team_id).first()
+    if team in user.teams:
+        user.teams.remove(team)
+        db.commit()
+    return {"message": "User removed from team"}

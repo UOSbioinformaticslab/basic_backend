@@ -22,7 +22,7 @@ def login_for_access_token(
 
     # Include both user and team context in the token
     access_token = auth.create_access_token(
-        data={"sub": user.email, "user_id": user.id, "team_id": user.team_id}
+        data={"sub": user.email, "user_id": user.id}
     )
     return {
         "access_token": access_token,
@@ -31,6 +31,7 @@ def login_for_access_token(
             "id": user.id,
             "name": user.name,
             "email": user.email,
+            "is_admin": bool(getattr(user, 'is_admin', False)),
             "teams": [{"id": t.id, "name": t.name} for t in user.teams]
         }
     }

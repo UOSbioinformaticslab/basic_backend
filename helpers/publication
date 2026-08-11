@@ -1,0 +1,16 @@
+
+Information for the publication model
+
+'paper_title' -> title : Str
+'authors' -> author : List[Dict[Str,Any]]]
+'year_of_publication' -> published : Str
+'paper_doi' -> DOI : Str
+'journal_name' -> container-title : Str
+'abstract' -> abstract : Str
+'URL' -> 'URL' : Str
+'team_id' -> pickup from local storage : Str
+
+Information for the publication_has_dataset model
+
+'publication_id' : Str
+'dataset_version_id' : Str

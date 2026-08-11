@@ -46,7 +46,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     name = Column(String)
     hashed_password = Column(String)  # For secure storage
-    team_id = Column(Integer, ForeignKey("teams.id"))
+    is_admin = Column(Boolean, default=False)
 
     # Relationships to easily access team, dataset, and project data
     teams = relationship("Team", secondary=user_teams, back_populates="members")
@@ -63,7 +63,9 @@ class Dataset(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     datasetid = Column(String, unique=True)  # e.g. CRUK_001
-    metadata_blob = Column(JSON)  # The actual React form data
+    metadata_blob = Column(JSON)  # The live/active React form data
+    draft_metadata_blob = Column(JSON, nullable=True)  # Working draft edits
+    active = Column(Boolean, default=False)  # True = Active/Published, False = Draft
     status = Column(String, default="DRAFT")
     user_id = Column(Integer, ForeignKey("users.id"))
     team_id = Column(Integer, ForeignKey("teams.id"))
@@ -72,8 +74,15 @@ class Dataset(Base):
     user = relationship("User", back_populates="datasets")
     team = relationship("Team", back_populates="datasets")
     project_datasets = relationship("ProjectDataset", back_populates="dataset")
+    publications = relationship("Publication", secondary="publication_has_dataset", back_populates="datasets")
 
-
+    @property
+    def computed_title(self) -> str:
+        if isinstance(self.metadata_blob, dict):
+            summary = self.metadata_blob.get("summary", {})
+            if isinstance(summary, dict):
+                return summary.get("title", f"Dataset {self.id}")
+        return f"Dataset {self.id}"
 
 class Project(Base):
     __tablename__ = "projects"
@@ -87,13 +96,13 @@ class Project(Base):
     # Specific columns to match the HDRUK/PHP $fillable structure
     pid = Column(String, unique=True, index=True)
     version = Column(String)
-    projectGrantName = Column(String)
-    leadResearcher = Column(String)
-    leadResearchInstitute = Column(String)
-    grantNumbers = Column(String)
-    projectGrantStartDate = Column(String)  # Stored as string for frontend flexibility
-    projectGrantEndDate = Column(String)
-    projectGrantScope = Column(String)
+    project_grant_name = Column(String)
+    lead_researcher = Column(String)
+    lead_research_institute = Column(String)
+    grant_numbers = Column(String)
+    project_grant_start_date = Column(String)  # Stored as string for frontend flexibility
+    project_grant_end_date = Column(String)
+    project_grant_scope = Column(String)
 
     # Metadata blob for catch-all React form storage
     metadata_blob = Column(JSON)
@@ -109,7 +118,7 @@ class Project(Base):
     user = relationship("User", back_populates="projects")
     team = relationship("Team", back_populates="projects")
     project_datasets = relationship("ProjectDataset", back_populates="project")
-
+    publications = relationship("Publication", secondary="publication_has_project", back_populates="projects")
 
 class CancerTermMapping(Base):
     __tablename__ = "cancer_term_mappings"
@@ -128,3 +137,30 @@ class SnomedFilter(Base):
     icdo_code = Column(String, unique=False, index=False, nullable=False)
     topography = Column(String, unique=False, index=False, nullable=False)
     filter_code = Column(String, unique=False, index=False, nullable=False)
+
+class Publication(Base):
+    __tablename__ = "publications"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    paper_title = Column(String)
+    authors = Column(JSON)
+    year_of_publication = Column(String)
+    paper_doi = Column(String, unique=True, index=True)
+    journal_name = Column(String)
+    abstract = Column(String)
+    url = Column(String)
+    team_id = Column(Integer, ForeignKey("teams.id"))
+    datasets = relationship("Dataset", secondary="publication_has_dataset", back_populates="publications")
+    projects = relationship("Project", secondary="publication_has_project", back_populates="publications")
+
+class PublicationHasDataset(Base):
+    __tablename__ = "publication_has_dataset"
+
+    publication_id = Column(Integer, ForeignKey("publications.id", ondelete="CASCADE"), primary_key=True)
+    dataset_id = Column(Integer, ForeignKey("datasets.id", ondelete="CASCADE"), primary_key=True)
+
+class PublicationHasProject(Base):
+    __tablename__ = "publication_has_project"
+
+    publication_id = Column(Integer, ForeignKey("publications.id", ondelete="CASCADE"), primary_key=True)
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True)

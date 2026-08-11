@@ -57,4 +57,4 @@ def append_reassigning_ids(source_db_path, dest_db_path):
 
 
 if __name__ == "__main__":
-    append_reassigning_ids("extra.db", "cruk_datahub.db")
+    append_reassigning_ids("extra.db", "../cruk_datahub.db")

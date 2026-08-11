@@ -12,24 +12,32 @@ from dependencies import get_current_user
 import database, schemas, models, crud
 router = APIRouter(prefix="/datasets", tags=["datasets"])
 
+def build_dataset_response(db_dataset: models.Dataset, use_draft: bool = False) -> dict:
+    blob = db_dataset.draft_metadata_blob if (use_draft and db_dataset.draft_metadata_blob is not None) else db_dataset.metadata_blob
+    if blob is None and db_dataset.draft_metadata_blob is not None:
+        blob = db_dataset.draft_metadata_blob
+    return {
+        "id": db_dataset.id,
+        "datasetid": db_dataset.datasetid,
+        "metadata_blob": blob or {},
+        "draft_metadata_blob": db_dataset.draft_metadata_blob,
+        "team_id": db_dataset.team_id,
+        "status": db_dataset.status,
+        "active": bool(db_dataset.active),
+        "has_draft": db_dataset.draft_metadata_blob is not None,
+        "created_at": db_dataset.created_at
+    }
+
+
 @router.get("/", response_model=List[schemas.DatasetResponse])
 def list_all_datasets(db: Session = Depends(database.get_db)):
     """
-    Publicly accessible route to view all datasets.
+    Publicly accessible route to view all ACTIVE datasets.
     Does NOT require a JWT token.
     """
-    return db.query(models.Dataset).all()
+    active_datasets = db.query(models.Dataset).filter(models.Dataset.active == True).all()
+    return [build_dataset_response(ds) for ds in active_datasets]
 
-
-@router.get("/{dataset_id}", response_model=schemas.DatasetResponse)
-def get_public_dataset(dataset_id: int, db: Session = Depends(database.get_db)):
-    # Look up the dataset by its primary key ID
-    db_dataset = db.query(models.Dataset).filter(models.Dataset.id == dataset_id).first()
-
-    if not db_dataset:
-        raise HTTPException(status_code=404, detail="Dataset not found")
-
-    return db_dataset
 
 @router.get("/search", response_model=List[schemas.DatasetResponse])
 def search_datasets(
@@ -37,45 +45,65 @@ def search_datasets(
         db: Session = Depends(database.get_db)
 ):
     """
-    Search for a dataset by checking the specific summary.title path.
+    Search for active datasets by checking the specific summary.title path.
     """
     search_term = f"%{title}%"
 
-    # Extracts the specific key before applying the ILIKE filter
     datasets = db.query(models.Dataset).filter(
+        models.Dataset.active == True,
         func.json_extract(models.Dataset.metadata_blob, '$.summary.title').ilike(search_term)
     ).all()
 
-    return datasets
+    return [build_dataset_response(ds) for ds in datasets]
 
 
 @router.get("/list/simple", response_model=List[schemas.DatasetSimpleResponse])
 def get_simple_dataset_list(db: Session = Depends(database.get_db)):
-    """
-    Returns a lightweight list of all datasets containing only their ID,
-    datasetid, and extracted name.
-    """
+    # Query all dataset records so editors can see drafts and active records
     records = db.query(
         models.Dataset.id,
         models.Dataset.datasetid,
-        models.Dataset.metadata_blob
+        models.Dataset.metadata_blob,
+        models.Dataset.draft_metadata_blob,
+        models.Dataset.active
     ).all()
 
     results = []
     for record in records:
-        name = "Untitled Dataset"
-
-        # Safely extract the title from the JSON blob if it exists
-        if record.metadata_blob and isinstance(record.metadata_blob, dict):
-            name = record.metadata_blob.get("summary", {}).get("title", name)
+        # Prefer draft title if present, otherwise active title
+        blob = record.draft_metadata_blob if record.draft_metadata_blob is not None else record.metadata_blob
+        title = f"Dataset {record.id}"
+        if isinstance(blob, dict):
+            title = blob.get("summary", {}).get("title", title)
 
         results.append({
             "id": record.id,
             "datasetid": record.datasetid,
-            "name": name
+            "computed_title": title,
+            "active": bool(record.active),
+            "has_draft": record.draft_metadata_blob is not None
         })
-
     return results
+
+
+@router.get("/{dataset_id}", response_model=schemas.DatasetResponse)
+def get_public_dataset(
+        dataset_id: int,
+        preview: bool = False,
+        db: Session = Depends(database.get_db)
+):
+    # Look up the dataset by its primary key ID
+    db_dataset = db.query(models.Dataset).filter(models.Dataset.id == dataset_id).first()
+
+    if not db_dataset:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+
+    # If dataset is not active and not in preview mode, hide it from public view
+    if not db_dataset.active and not preview:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+
+    return build_dataset_response(db_dataset, use_draft=preview)
+
 
 @router.post("/", response_model=schemas.DatasetResponse)
 def save_metadata_progress(
@@ -83,43 +111,36 @@ def save_metadata_progress(
         db: Session = Depends(database.get_db),
         current_user: models.User = Depends(get_current_user)
 ):
-    # --- NEW LOGGING ---
-    print("\n" + "="*40)
-
-    print(f"📥 RECEIVED POST: DATASET")
-    print(f"User: {current_user.name} (ID: {current_user.id})")
-
-    # Check both the token context and the payload context
     payload_team_id = dataset_in.team_id
-    print(f"Team ID from Frontend Payload: {payload_team_id}")
-    print(f"Team ID from User Profile: {current_user.team_id}")
-    print("="*40 + "\n")
-
     unique_ds_id = f"DS-{uuid.uuid4().hex[:8].upper()}"
-
-    # Use the payload_team_id to ensure we don't save 'None'
-    target_team_id = payload_team_id or current_user.team_id
+    target_team_id = payload_team_id
 
     if not target_team_id:
         raise HTTPException(status_code=400, detail="Missing Team ID context")
 
-    # 2. Map the React metadata_blob to the SQL model
+    user_team_ids = [team.id for team in current_user.teams]
+    if target_team_id not in user_team_ids:
+        raise HTTPException(status_code=403, detail="User is not a member of the specified team")
+
+    is_active = bool(dataset_in.active or dataset_in.status == models.Dataset.STATUS_ACTIVE)
+
     db_dataset = models.Dataset(
-        metadata_blob=dataset_in.metadata_blob,  # The full JSON object from the form
-        datasetid=unique_ds_id,  # Custom ID
-        user_id=current_user.id,  # Authenticated User ID
-        team_id=dataset_in.team_id,  # Authenticated Team ID
-        status=models.Dataset.STATUS_DRAFT,  # Defaults to 'DRAFT'
+        metadata_blob=dataset_in.metadata_blob if is_active else {},
+        draft_metadata_blob=None if is_active else dataset_in.metadata_blob,
+        datasetid=unique_ds_id,
+        user_id=current_user.id,
+        team_id=dataset_in.team_id,
+        active=is_active,
+        status=models.Dataset.STATUS_ACTIVE if is_active else models.Dataset.STATUS_DRAFT,
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow()
     )
 
     try:
-        # 3. Commit to the database
         db.add(db_dataset)
         db.commit()
         db.refresh(db_dataset)
-        return db_dataset
+        return build_dataset_response(db_dataset, use_draft=not is_active)
     except Exception as e:
         db.rollback()
         raise HTTPException(
@@ -135,25 +156,44 @@ def update_metadata_progress(
         db: Session = Depends(database.get_db),
         current_user: models.User = Depends(get_current_user)
 ):
-    # 1. Retrieve the existing dataset from the database
     db_dataset = db.query(models.Dataset).filter(models.Dataset.id == dataset_id).first()
 
     if not db_dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
 
-    # 2. Update the fields with the incoming data
-    db_dataset.metadata_blob = dataset_in.metadata_blob
-    db_dataset.team_id = dataset_in.team_id
+    if dataset_in.team_id:
+        user_team_ids = [team.id for team in current_user.teams]
+        if dataset_in.team_id not in user_team_ids:
+            raise HTTPException(status_code=403, detail="User is not a member of the specified team")
+        db_dataset.team_id = dataset_in.team_id
 
-    # If your model/schema tracks status (like "DRAFT"), update it as well
-    if hasattr(dataset_in, 'status') and dataset_in.status:
-        db_dataset.status = dataset_in.status
+    # Check for unpublish request
+    if dataset_in.unpublish:
+        db_dataset.active = False
+        db_dataset.status = models.Dataset.STATUS_DRAFT
+    elif dataset_in.active or dataset_in.status == models.Dataset.STATUS_ACTIVE:
+        # Publish/Make Active: promote draft data (or payload) to live metadata_blob
+        incoming_blob = dataset_in.metadata_blob or db_dataset.draft_metadata_blob or db_dataset.metadata_blob
+        db_dataset.metadata_blob = incoming_blob
+        db_dataset.draft_metadata_blob = None
+        db_dataset.active = True
+        db_dataset.status = models.Dataset.STATUS_ACTIVE
+    else:
+        # Save as Draft
+        if db_dataset.active:
+            # Record is already published: save new edits as working draft
+            db_dataset.draft_metadata_blob = dataset_in.metadata_blob
+        else:
+            # Record is currently draft only
+            db_dataset.metadata_blob = dataset_in.metadata_blob
+            db_dataset.draft_metadata_blob = None
+            db_dataset.active = False
+            db_dataset.status = models.Dataset.STATUS_DRAFT
 
-    # 3. Commit the changes
     try:
         db.commit()
         db.refresh(db_dataset)
-        return db_dataset
+        return build_dataset_response(db_dataset, use_draft=not db_dataset.active)
     except Exception as e:
         db.rollback()
         raise HTTPException(

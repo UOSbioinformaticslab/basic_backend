@@ -1,7 +1,8 @@
 # schemas.py
 from pydantic import BaseModel, EmailStr
-from typing import Optional, List, Any
+from typing import Optional, List, Dict, Any
 from datetime import datetime
+
 
 class SnomedFilterResponse(BaseModel):
     id: int
@@ -31,8 +32,11 @@ class LookupRequest(BaseModel):
 # --- Dataset Schemas (Unchanged - Keeping datasetid flatcase) ---
 class DatasetBase(BaseModel):
     metadata_blob: dict
+    draft_metadata_blob: Optional[dict] = None
+    active: Optional[bool] = False
     team_id: Optional[int] = None
     status: Optional[str] = "DRAFT"
+    unpublish: Optional[bool] = False
 
 
 class DatasetCreate(DatasetBase):
@@ -43,18 +47,19 @@ class DatasetCreate(DatasetBase):
 class DatasetResponse(DatasetBase):
     id: int
     datasetid: str
+    active: bool = False
+    has_draft: bool = False
     created_at: datetime
 
     class Config:
         from_attributes = True
 
-from pydantic import BaseModel
-from typing import Optional, List
-
 class DatasetSimpleResponse(BaseModel):
     id: int
     datasetid: Optional[str] = None
-    name: str
+    computed_title: str #this is drawn from the @property in models.py
+    active: bool = False
+    has_draft: bool = False
 
     class Config:
         from_attributes = True
@@ -72,14 +77,12 @@ class UserCreate(BaseModel):
     email: EmailStr
     name: str
     password: str
-    team_id: int
 
 
 class UserResponse(BaseModel):
     id: int
     email: str
     name: Optional[str]
-    team_id: int
 
     class Config:
         from_attributes = True
@@ -90,13 +93,13 @@ class ProjectBase(BaseModel):
     # These match the $fillable array in the PHP model
     pid: Optional[str] = None
     version: Optional[str] = None
-    projectGrantName: Optional[str] = None
-    leadResearcher: Optional[str] = None
-    leadResearchInstitute: Optional[str] = None
-    grantNumbers: Optional[str] = None
-    projectGrantStartDate: Optional[str] = None
-    projectGrantEndDate: Optional[str] = None
-    projectGrantScope: Optional[str] = None
+    project_grant_name: Optional[str] = None
+    lead_researcher: Optional[str] = None
+    lead_research_institute: Optional[str] = None
+    grant_numbers: Optional[str] = None
+    project_grant_start_date: Optional[str] = None
+    project_grant_end_date: Optional[str] = None
+    project_grant_scope: Optional[str] = None
 
     # Still keeping the blob for extra React-specific form data
     metadata_blob: dict
@@ -110,8 +113,8 @@ class ProjectCreate(ProjectBase):
 class ProjectResponse(ProjectBase):
     id: int  # The internal database row number
     status: str
-    user_id: int
-    team_id: int
+    user_id: Optional[int] = None
+    team_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
 
@@ -133,3 +136,53 @@ class ProjectDatasetResponse(ProjectDatasetBase):
 
     class Config:
         from_attributes = True
+
+from pydantic import BaseModel
+from typing import List, Dict, Any, Optional
+
+class PublicationBase(BaseModel):
+    paper_title: str
+    authors: List[str] = []
+    year_of_publication: str
+    paper_doi: str
+    journal_name: str
+    abstract: Optional[str] = None
+    url: Optional[str] = None
+    team_id: int
+
+class PublicationCreate(PublicationBase):
+    pass
+
+class Publication(PublicationBase):
+    id: int
+    datasets: List[DatasetSimpleResponse] = []  # MUST be present
+    projects: List[ProjectResponse] = []  # MUST be present
+
+    class Config:
+        from_attributes = True # Use orm_mode = True if you are on Pydantic v1
+
+class PublicationHasDatasetBase(BaseModel):
+    publication_id: int
+    dataset_id: int
+
+class PublicationHasDatasetCreate(PublicationHasDatasetBase):
+    pass
+
+class PublicationHasDataset(PublicationHasDatasetBase):
+    class Config:
+        from_attributes = True
+
+class PublicationHasProjectBase(BaseModel):
+    publication_id: int
+    project_id: int
+
+class PublicationHasProjectCreate(PublicationHasProjectBase):
+    pass
+
+class PublicationHasProject(PublicationHasProjectBase):
+    class Config:
+        from_attributes = True
+
+class DOICreateRequest(BaseModel):
+    doi: str
+    team_id: int
