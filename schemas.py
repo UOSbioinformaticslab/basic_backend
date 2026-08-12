@@ -180,7 +180,7 @@ from typing import List, Dict, Any, Optional
 
 class PublicationBase(BaseModel):
     paper_title: str
-    authors: List[str] = []
+    authors: List[Any] = []
     year_of_publication: str
     paper_doi: str
     journal_name: str

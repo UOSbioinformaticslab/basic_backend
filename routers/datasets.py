@@ -59,15 +59,29 @@ def search_datasets(
 
 
 @router.get("/list/simple", response_model=List[schemas.DatasetSimpleResponse])
-def get_simple_dataset_list(db: Session = Depends(database.get_db)):
+def get_simple_dataset_list(
+    team_id: int = None,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(get_current_user)
+):
     # Query all dataset records so editors can see drafts and active records
-    records = db.query(
+    query = db.query(
         models.Dataset.id,
         models.Dataset.datasetid,
         models.Dataset.metadata_blob,
         models.Dataset.draft_metadata_blob,
         models.Dataset.active
-    ).all()
+    )
+    
+    if team_id:
+        if not current_user.is_admin and team_id not in [t.id for t in current_user.teams]:
+            raise HTTPException(status_code=403, detail="Not in this team")
+        query = query.filter(models.Dataset.team_id == team_id)
+    elif not current_user.is_admin:
+        team_ids = [t.id for t in current_user.teams]
+        query = query.filter(models.Dataset.team_id.in_(team_ids))
+        
+    records = query.all()
 
     results = []
     for record in records:

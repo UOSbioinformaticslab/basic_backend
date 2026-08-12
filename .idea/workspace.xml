@@ -4,23 +4,37 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e401d040-c62c-484d-a698-f02b5402e582" name="Changes" comment="adding publications">
-      <change afterPath="$PROJECT_DIR$/add_examples.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/examples/metformin_dataset.json" afterDir="false" />
+    <list default="true" id="e401d040-c62c-484d-a698-f02b5402e582" name="Changes" comment="enabling notifications">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/crud.py" beforeDir="false" afterPath="$PROJECT_DIR$/crud.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cruk_datahub.db" beforeDir="false" afterPath="$PROJECT_DIR$/cruk_datahub.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routers/datasets.py" beforeDir="false" afterPath="$PROJECT_DIR$/routers/datasets.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routers/publications.py" beforeDir="false" afterPath="$PROJECT_DIR$/routers/publications.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="Git.Merge.Settings">
+    <option name="BRANCH" value="main" />
+  </component>
   <component name="Git.Settings">
+    <excluded-from-favorite>
+      <branch-storage>
+        <map>
+          <entry type="LOCAL">
+            <value>
+              <list>
+                <branch-info repo="$PROJECT_DIR$" source="main" />
+              </list>
+            </value>
+          </entry>
+        </map>
+      </branch-storage>
+    </excluded-from-favorite>
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="dev" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
@@ -52,8 +66,8 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "dev",
-    "last_opened_file_path": "/Users/sarahwooller/Sussex/CRUK/website/fastapi-backend"
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/Users/sarahwooller/Sussex/CRUK/website/basic/basic_backend"
   }
 }]]></component>
   <component name="SharedIndexes">
@@ -80,7 +94,23 @@
       <option name="project" value="LOCAL" />
       <updated>1782146596317</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="enabling a new team member">
+      <option name="closed" value="true" />
+      <created>1786460108563</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1786460108563</updated>
+    </task>
+    <task id="LOCAL-00003" summary="enabling notifications">
+      <option name="closed" value="true" />
+      <created>1786477077322</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1786477077322</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -96,6 +126,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="adding publications" />
-    <option name="LAST_COMMIT_MESSAGE" value="adding publications" />
+    <MESSAGE value="enabling a new team member" />
+    <MESSAGE value="enabling notifications" />
+    <option name="LAST_COMMIT_MESSAGE" value="enabling notifications" />
   </component>
 </project>

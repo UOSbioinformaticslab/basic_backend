@@ -27,3 +27,11 @@ The SQLite database file (`cruk_datahub.db`) is intentionally excluded from vers
 
 ### Filter Mapping System
 The backend powers the dataset upload filter system. When users select Topography and Histology tags on the frontend, it posts to the `/datasets/extra-terms` endpoint. The backend looks up these tags in the `CancerTermMapping` table and returns associated SNOMED/TCGA mappings to inject into the dataset payload before it is saved.
+
+### Data Custodians
+
+The backend provides comprehensive support for Data Custodians (teams) and their actions:
+- **Public Team Assets**: The `/teams/{team_id}/assets` endpoint aggregates and returns all active datasets, projects, and publications associated with a specific team for the public Data Custodian page.
+- **Data Custodian Actions**: The API supports team-specific actions including:
+  - **Asset Management**: Endpoints like `/datasets/list/simple` automatically filter results based on the logged-in user's active team, allowing editors to manage both active records and drafts securely.
+  - **Team Administration**: Endpoints to manage team invitations, toggle admin roles, and retrieve data access enquiries for the team.
