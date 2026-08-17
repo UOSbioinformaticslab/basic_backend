@@ -108,6 +108,7 @@ class Dataset(Base):
     team = relationship("Team", back_populates="datasets")
     project_datasets = relationship("ProjectDataset", back_populates="dataset")
     publications = relationship("Publication", secondary="publication_has_dataset", back_populates="datasets")
+    tools = relationship("Tool", secondary="tool_has_dataset", back_populates="datasets")
 
     @property
     def computed_title(self) -> str:
@@ -152,6 +153,7 @@ class Project(Base):
     team = relationship("Team", back_populates="projects")
     project_datasets = relationship("ProjectDataset", back_populates="project")
     publications = relationship("Publication", secondary="publication_has_project", back_populates="projects")
+    tools = relationship("Tool", secondary="tool_has_project", back_populates="projects")
 
 class CancerTermMapping(Base):
     __tablename__ = "cancer_term_mappings"
@@ -185,6 +187,7 @@ class Publication(Base):
     team_id = Column(Integer, ForeignKey("teams.id"))
     datasets = relationship("Dataset", secondary="publication_has_dataset", back_populates="publications")
     projects = relationship("Project", secondary="publication_has_project", back_populates="publications")
+    tools = relationship("Tool", secondary="publication_has_tool", back_populates="publications")
 
 class PublicationHasDataset(Base):
     __tablename__ = "publication_has_dataset"
@@ -197,3 +200,52 @@ class PublicationHasProject(Base):
 
     publication_id = Column(Integer, ForeignKey("publications.id", ondelete="CASCADE"), primary_key=True)
     project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True)
+
+class ToolHasDataset(Base):
+    __tablename__ = "tool_has_dataset"
+    tool_id = Column(Integer, ForeignKey("tools.id", ondelete="CASCADE"), primary_key=True)
+    dataset_id = Column(Integer, ForeignKey("datasets.id", ondelete="CASCADE"), primary_key=True)
+
+class ToolHasProject(Base):
+    __tablename__ = "tool_has_project"
+    tool_id = Column(Integer, ForeignKey("tools.id", ondelete="CASCADE"), primary_key=True)
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True)
+
+class PublicationHasTool(Base):
+    __tablename__ = "publication_has_tool"
+    publication_id = Column(Integer, ForeignKey("publications.id", ondelete="CASCADE"), primary_key=True)
+    tool_id = Column(Integer, ForeignKey("tools.id", ondelete="CASCADE"), primary_key=True)
+
+class Tool(Base):
+    __tablename__ = "tools"
+
+    STATUS_ACTIVE = 'ACTIVE'
+    STATUS_DRAFT = 'DRAFT'
+    STATUS_ARCHIVED = 'ARCHIVED'
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    url = Column(String, nullable=True)
+    description = Column(String, nullable=True)
+    results_insights = Column(String, nullable=True)
+    license = Column(String, nullable=True)
+    tech_stack = Column(JSON, nullable=True)
+    category_id = Column(Integer, nullable=True)
+    enabled = Column(Boolean, default=True)
+    associated_authors = Column(JSON, nullable=True)
+    contact_address = Column(String, nullable=True)
+    any_dataset = Column(Boolean, default=False)
+    status = Column(String, default="DRAFT")
+
+    user_id = Column(Integer, ForeignKey("users.id"))
+    team_id = Column(Integer, ForeignKey("teams.id"))
+
+    user = relationship("User")
+    team = relationship("Team")
+    
+    datasets = relationship("Dataset", secondary="tool_has_dataset", back_populates="tools")
+    projects = relationship("Project", secondary="tool_has_project", back_populates="tools")
+    publications = relationship("Publication", secondary="publication_has_tool", back_populates="tools")
+
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))

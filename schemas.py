@@ -51,6 +51,7 @@ class DatasetResponse(DatasetBase):
     has_draft: bool = False
     created_at: datetime
     team_name: Optional[str] = None
+    tools: List[Any] = []
 
     class Config:
         from_attributes = True
@@ -155,6 +156,7 @@ class ProjectResponse(ProjectBase):
     team_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
+    tools: List[Any] = []
 
     class Config:
         from_attributes = True
@@ -195,6 +197,7 @@ class Publication(PublicationBase):
     id: int
     datasets: List[DatasetSimpleResponse] = []  # MUST be present
     projects: List[ProjectResponse] = []  # MUST be present
+    tools: List[Any] = [] # We'll just use Any for now or forward ref to ToolResponse
 
     class Config:
         from_attributes = True # Use orm_mode = True if you are on Pydantic v1
@@ -224,3 +227,45 @@ class PublicationHasProject(PublicationHasProjectBase):
 class DOICreateRequest(BaseModel):
     doi: str
     team_id: int
+
+class ToolBase(BaseModel):
+    name: str
+    url: Optional[str] = None
+    description: Optional[str] = None
+    results_insights: Optional[str] = None
+    license: Optional[str] = None
+    tech_stack: Optional[Any] = None
+    category_id: Optional[int] = None
+    enabled: bool = True
+    associated_authors: Optional[Any] = None
+    contact_address: Optional[str] = None
+    any_dataset: bool = False
+    status: str = "DRAFT"
+    team_id: int
+
+class ToolCreate(ToolBase):
+    linked_datasets: Optional[List[int]] = []
+    linked_projects: Optional[List[int]] = []
+
+class ToolResponse(ToolBase):
+    id: int
+    user_id: Optional[int] = None
+    created_at: datetime
+    updated_at: datetime
+    datasets: List[DatasetSimpleResponse] = []
+    projects: List[ProjectResponse] = []
+
+    class Config:
+        from_attributes = True
+
+class ToolHasDatasetBase(BaseModel):
+    tool_id: int
+    dataset_id: int
+
+class ToolHasProjectBase(BaseModel):
+    tool_id: int
+    project_id: int
+
+class PublicationHasToolBase(BaseModel):
+    publication_id: int
+    tool_id: int
