@@ -70,21 +70,8 @@ class User(Base):
     teams = relationship("Team", secondary=user_teams, back_populates="members")
     datasets = relationship("Dataset", back_populates="user")
     projects = relationship("Project", back_populates="user")
-    enquiries = relationship("DataCustodianEnquiry", back_populates="user")
 
-class DataCustodianEnquiry(Base):
-    __tablename__ = "data_custodian_enquiries"
-    id = Column(Integer, primary_key=True, index=True)
-    team_id = Column(Integer, ForeignKey("teams.id"))
-    user_id = Column(Integer, ForeignKey("users.id"))
-    dataset_name = Column(String, nullable=True)
-    contact_number = Column(String, nullable=True)
-    enquiry_text = Column(String)
-    consent_given = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-    team = relationship("Team")
-    user = relationship("User", back_populates="enquiries")
 
 
 class Dataset(Base):

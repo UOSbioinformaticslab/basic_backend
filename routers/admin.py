@@ -172,22 +172,3 @@ def toggle_team_admin(user_id: int, team_id: int, payload: AdminUpdate, db: Sess
         raise HTTPException(status_code=404, detail="User-Team link not found")
     db.commit()
     return {"message": "Team Admin status updated"}
-
-@router.get("/enquiries")
-def get_all_enquiries(db: Session = Depends(database.get_db)):
-    enquiries = db.query(models.DataCustodianEnquiry).order_by(models.DataCustodianEnquiry.created_at.desc()).all()
-    results = []
-    for enq in enquiries:
-        results.append({
-            "id": enq.id,
-            "team_id": enq.team_id,
-            "team_name": enq.team.name if enq.team else "Unknown",
-            "dataset_name": enq.dataset_name,
-            "enquiry_text": enq.enquiry_text,
-            "created_at": enq.created_at,
-            "applicant_name": enq.user.name if enq.user else "Unknown",
-            "applicant_email": enq.user.email if enq.user else "Unknown",
-            "applicant_organisation": enq.user.applicant_organisation if enq.user else "Unknown",
-            "contact_number": enq.contact_number
-        })
-    return results
