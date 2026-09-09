@@ -7,7 +7,7 @@ sys.path.append(parent_dir)
 
 import models
 from auth import get_password_hash
-from config import SWOOLLER_PASSWORD
+from config import ADMIN_PASSWORD
 from database import SessionLocal, engine, Base
 
 def seed_data():
