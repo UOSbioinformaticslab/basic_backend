@@ -56,6 +56,9 @@ def update_project(
 
     # exclude_unset=True ensures we only update fields that were actually sent in the payload
     update_data = project_in.dict(exclude_unset=True)
+    if current_user and current_user.id:
+        update_data["user_id"] = current_user.id
+
     for key, value in update_data.items():
         setattr(db_project, key, value)
 
