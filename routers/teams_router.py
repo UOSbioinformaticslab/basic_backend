@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 import models, schemas, database, dependencies
+from helpers.email_utils import send_invitation_email
 
 router = APIRouter(prefix="/teams", tags=["teams"])
 
@@ -26,12 +27,50 @@ def create_invitation(
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
 
-    # Check if the user is already in the team
+    # Check if the user is already registered in the system
     existing_user = db.query(models.User).filter(models.User.email == invitation.email).first()
-    if existing_user and team_id in [t.id for t in existing_user.teams]:
-        raise HTTPException(status_code=400, detail="User is already in the team")
 
-    # Check for pending invitation
+    if existing_user:
+        # Check if user is already in this team
+        if team_id in [t.id for t in existing_user.teams]:
+            raise HTTPException(status_code=400, detail="User is already in the team")
+
+        # Automatically add the existing user to the team
+        team.members.append(existing_user)
+        db.commit()
+
+        if invitation.is_admin:
+            stmt = (
+                models.user_teams.update()
+                .where(
+                    (models.user_teams.c.user_id == existing_user.id) & 
+                    (models.user_teams.c.team_id == team.id)
+                )
+                .values(is_team_admin=True)
+            )
+            db.execute(stmt)
+            db.commit()
+
+        new_invitation = models.TeamInvitation(
+            team_id=team_id,
+            email=invitation.email,
+            status="ACCEPTED",
+            is_admin=invitation.is_admin
+        )
+        db.add(new_invitation)
+        db.commit()
+        db.refresh(new_invitation)
+
+        send_invitation_email(
+            recipient_email=invitation.email,
+            team_name=team.name,
+            inviter_name=current_user.name or "A team administrator",
+            is_existing_user=True
+        )
+
+        return new_invitation
+
+    # Check for pending invitation if user is not registered yet
     existing_invitation = db.query(models.TeamInvitation).filter(
         models.TeamInvitation.team_id == team_id,
         models.TeamInvitation.email == invitation.email,
@@ -49,7 +88,51 @@ def create_invitation(
     db.add(new_invitation)
     db.commit()
     db.refresh(new_invitation)
+
+    # Send automated email notification to the unregistered invited user
+    send_invitation_email(
+        recipient_email=invitation.email,
+        team_name=team.name,
+        inviter_name=current_user.name or "A team administrator",
+        is_existing_user=False
+    )
+
     return new_invitation
+
+@router.get("/{team_id}/invitations", response_model=List[schemas.TeamInvitationResponse])
+def get_team_pending_invitations(
+    team_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(dependencies.get_current_user)
+):
+    if not current_user.is_admin and team_id not in [t.id for t in current_user.teams]:
+        raise HTTPException(status_code=403, detail="Not authorized to view invitations for this team")
+    
+    return db.query(models.TeamInvitation).filter(
+        models.TeamInvitation.team_id == team_id,
+        models.TeamInvitation.status == "PENDING"
+    ).all()
+
+@router.delete("/{team_id}/invitations/{invitation_id}")
+def cancel_team_invitation(
+    team_id: int,
+    invitation_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(dependencies.get_current_user)
+):
+    if not current_user.is_admin and team_id not in [t.id for t in current_user.teams]:
+        raise HTTPException(status_code=403, detail="Not authorized to manage invitations for this team")
+        
+    invitation = db.query(models.TeamInvitation).filter(
+        models.TeamInvitation.id == invitation_id,
+        models.TeamInvitation.team_id == team_id
+    ).first()
+    if not invitation:
+        raise HTTPException(status_code=404, detail="Invitation not found")
+        
+    db.delete(invitation)
+    db.commit()
+    return {"message": "Invitation cancelled"}
 
 @router.get("/invitations/pending", response_model=List[schemas.TeamInvitationResponse])
 def get_pending_invitations(

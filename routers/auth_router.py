@@ -2,9 +2,76 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-import models, auth, database
+import models, auth, database, schemas
+
 
 router = APIRouter(tags=["authentication"])
+
+
+@router.post("/register")
+def register_user(
+    user_in: schemas.UserCreate,
+    db: Session = Depends(database.get_db)
+):
+    existing_user = db.query(models.User).filter(models.User.email == user_in.email).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    hashed_pwd = auth.get_password_hash(user_in.password)
+    new_user = models.User(
+        email=user_in.email,
+        name=user_in.name,
+        hashed_password=hashed_pwd,
+        applicant_organisation=user_in.applicant_organisation or "University of Sussex"
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    # Check for pending team invitations and automatically accept them
+    pending_invitations = db.query(models.TeamInvitation).filter(
+        models.TeamInvitation.email == user_in.email,
+        models.TeamInvitation.status == "PENDING"
+    ).all()
+
+    for invitation in pending_invitations:
+        team = db.query(models.Team).filter(models.Team.id == invitation.team_id).first()
+        if team and new_user not in team.members:
+            team.members.append(new_user)
+            db.commit()
+            if invitation.is_admin:
+                stmt = (
+                    models.user_teams.update()
+                    .where(
+                        (models.user_teams.c.user_id == new_user.id) & 
+                        (models.user_teams.c.team_id == team.id)
+                    )
+                    .values(is_team_admin=True)
+                )
+                db.execute(stmt)
+                db.commit()
+        invitation.status = "ACCEPTED"
+        db.commit()
+
+    db.refresh(new_user)
+    user_team_links = db.query(models.user_teams).filter_by(user_id=new_user.id).all()
+    team_admin_map = {link.team_id: link.is_team_admin for link in user_team_links}
+
+    access_token = auth.create_access_token(
+        data={"sub": new_user.email, "user_id": new_user.id}
+    )
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": new_user.id,
+            "name": new_user.name,
+            "email": new_user.email,
+            "applicant_organisation": new_user.applicant_organisation,
+            "is_admin": bool(getattr(new_user, 'is_admin', False)),
+            "teams": [{"id": t.id, "name": t.name, "is_team_admin": team_admin_map.get(t.id, False)} for t in new_user.teams]
+        }
+    }
 
 
 @router.post("/token")

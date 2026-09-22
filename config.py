@@ -7,7 +7,8 @@ load_dotenv()
 # Now you safely retrieve them without hardcoding anything
 SECRET_KEY = os.environ.get("SECRET_KEY")
 ALGORITHM = os.environ.get("ALGORITHM")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES"))
+val = os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", "600")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(val.split('#')[0].strip()) if val else 600
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 DATABASE_PUBLIC_URL = os.environ.get("DATABASE_PUBLIC_URL")
