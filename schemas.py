@@ -106,6 +106,11 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class ChangePasswordRequest(BaseModel):
+    old_password: str
+    new_password: str
+
+
 # --- ENQUIRIES ---
 
 class EnquiryCreate(BaseModel):

@@ -2,10 +2,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-import models, auth, database, schemas
+import models, auth, database, schemas, dependencies
 
 
 router = APIRouter(tags=["authentication"])
+
 
 
 @router.post("/register")
@@ -107,3 +108,23 @@ def login_for_access_token(
             "teams": [{"id": t.id, "name": t.name, "is_team_admin": team_admin_map.get(t.id, False)} for t in user.teams]
         }
     }
+
+
+@router.put("/me/password")
+def change_own_password(
+    payload: schemas.ChangePasswordRequest,
+    current_user: models.User = Depends(dependencies.get_current_user),
+    db: Session = Depends(database.get_db)
+):
+    """
+    Allows logged-in users to update their own password.
+    """
+    if not auth.verify_password(payload.old_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect"
+        )
+
+    current_user.hashed_password = auth.get_password_hash(payload.new_password)
+    db.commit()
+    return {"message": "Password successfully changed"}
