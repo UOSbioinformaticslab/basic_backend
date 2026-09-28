@@ -160,6 +160,29 @@ class SnomedFilter(Base):
     topography = Column(String, unique=False, index=False, nullable=False)
     filter_code = Column(String, unique=False, index=False, nullable=False)
 
+class Filter(Base):
+    __tablename__ = "filters"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(String, primary_key=True, index=True)
+    label = Column(String, index=True)
+    category = Column(String)
+    primaryGroup = Column(String)
+    description = Column(String)
+    parentId = Column(String, nullable=True)
+    path = Column(JSON)
+
+class CancerTermIdMapping(Base):
+    __tablename__ = "cancer_term_id_mappings"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    topography_id = Column(String, index=True)
+    histology_id = Column(String, index=True)
+    topography_label = Column(String)
+    histology_label = Column(String)
+    extra_filter_ids = Column(JSON)
+
 class Publication(Base):
     __tablename__ = "publications"
 

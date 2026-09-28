@@ -26,8 +26,10 @@ class CancerTermMappingResponse(CancerTermMappingCreate):
         from_attributes = True  # Allows Pydantic to read SQLAlchemy models
 
 class LookupRequest(BaseModel):
-    topographies: List[str]
-    histologies: List[str]
+    topographies: Optional[List[str]] = []
+    histologies: Optional[List[str]] = []
+    topography_ids: Optional[List[str]] = []
+    histology_ids: Optional[List[str]] = []
 
 # --- Dataset Schemas (Unchanged - Keeping datasetid flatcase) ---
 class DatasetBase(BaseModel):

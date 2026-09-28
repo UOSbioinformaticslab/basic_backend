@@ -40,6 +40,27 @@ def list_all_datasets(db: Session = Depends(database.get_db)):
     return [build_dataset_response(ds) for ds in active_datasets]
 
 
+@router.get("/filters")
+def get_all_filters(db: Session = Depends(database.get_db)):
+    """
+    Returns the complete taxonomy filter dictionary from the database,
+    keyed by filter ID string.
+    """
+    filter_records = db.query(models.Filter).all()
+    result = {}
+    for f in filter_records:
+        result[f.id] = {
+            "id": f.id,
+            "label": f.label,
+            "category": f.category,
+            "primaryGroup": f.primaryGroup,
+            "description": f.description or "",
+            "parentId": f.parentId,
+            "path": f.path or []
+        }
+    return result
+
+
 @router.get("/search", response_model=List[schemas.DatasetResponse])
 def search_datasets(
         title: str,
@@ -320,21 +341,71 @@ def get_matching_terms(
         db: Session = Depends(database.get_db)
 ):
     """
-    Given a list of topography and histology labels, returns a nested
-    mapping dictionary containing matching supplementary ontology records.
+    Given a list of topography and histology IDs (or labels), returns a nested
+    mapping dictionary containing matching supplementary ontology records,
+    hydrating full filter objects looked up directly from the database 'filters' table.
     """
-    # Filter for mapping entries matching the criteria fields
-    records = db.query(models.CancerTermMapping).filter(
-        models.CancerTermMapping.topography.in_(req.topographies),
-        models.CancerTermMapping.histology.in_(req.histologies)
+    topo_ids = req.topography_ids or []
+    hist_ids = req.histology_ids or []
+
+    # If label strings are provided instead of IDs, resolve labels to IDs via 'filters' table
+    if not topo_ids and req.topographies:
+        topo_filters = db.query(models.Filter).filter(models.Filter.label.in_(req.topographies)).all()
+        topo_ids = [f.id for f in topo_filters]
+
+    if not hist_ids and req.histologies:
+        hist_filters = db.query(models.Filter).filter(models.Filter.label.in_(req.histologies)).all()
+        hist_ids = [f.id for f in hist_filters]
+
+    # Query cancer_term_id_mappings table
+    id_records = db.query(models.CancerTermIdMapping).filter(
+        models.CancerTermIdMapping.topography_id.in_(topo_ids),
+        models.CancerTermIdMapping.histology_id.in_(hist_ids)
     ).all()
 
-    # Rebuild the records back into the nested mapping layout
+    # Collect all extra filter IDs to fetch metadata for
+    all_extra_ids = set()
+    for rec in id_records:
+        if rec.extra_filter_ids and isinstance(rec.extra_filter_ids, list):
+            for fid in rec.extra_filter_ids:
+                all_extra_ids.add(fid)
+
+    # Fetch full filter objects from 'filters' table
+    filter_records = db.query(models.Filter).filter(models.Filter.id.in_(all_extra_ids)).all()
+    filter_metadata_map = {
+        f.id: {
+            "id": f.id,
+            "label": f.label,
+            "category": f.category,
+            "primaryGroup": f.primaryGroup,
+            "description": f.description or ""
+        } for f in filter_records
+    }
+
+    # Construct nested lookup map expected by frontend (topo -> hist -> list of full tag objects)
     nested_map = {}
-    for record in records:
-        if record.topography not in nested_map:
-            nested_map[record.topography] = {}
-        nested_map[record.topography][record.histology] = record.associated_terms
+    for rec in id_records:
+        topo_key = rec.topography_label or rec.topography_id
+        hist_key = rec.histology_label or rec.histology_id
+
+        if topo_key not in nested_map:
+            nested_map[topo_key] = {}
+
+        hydrated_terms = [
+            filter_metadata_map[fid] for fid in rec.extra_filter_ids if fid in filter_metadata_map
+        ]
+        nested_map[topo_key][hist_key] = hydrated_terms
+
+    # Fallback to legacy CancerTermMapping table if no ID records found
+    if not nested_map and req.topographies and req.histologies:
+        legacy_records = db.query(models.CancerTermMapping).filter(
+            models.CancerTermMapping.topography.in_(req.topographies),
+            models.CancerTermMapping.histology.in_(req.histologies)
+        ).all()
+        for record in legacy_records:
+            if record.topography not in nested_map:
+                nested_map[record.topography] = {}
+            nested_map[record.topography][record.histology] = record.associated_terms
 
     return nested_map
 
