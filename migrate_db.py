@@ -8,9 +8,12 @@ def sync_postgres_sequences():
         try:
             with engine.begin() as conn:
                 query = text("""
-                    SELECT table_name 
-                    FROM information_schema.columns 
-                    WHERE table_schema = 'public' AND column_name = 'id';
+                    SELECT c.table_name 
+                    FROM information_schema.columns c
+                    WHERE c.table_schema = 'public' 
+                      AND c.column_name = 'id'
+                      AND c.data_type IN ('integer', 'bigint', 'smallint')
+                      AND pg_get_serial_sequence(c.table_name, 'id') IS NOT NULL;
                 """)
                 result = conn.execute(query)
                 tables = [row[0] for row in result.fetchall()]

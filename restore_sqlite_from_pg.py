@@ -1,11 +1,20 @@
 import sys
 import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from database import Base
 import models  # to ensure all models are registered
 
+load_dotenv()
+
 def run():
-    pg_url = "postgresql://postgres:hkJiqclpUJHSsJIhDSXiMGQFOtkDTmpX@monorail.proxy.rlwy.net:20854/railway"
+    pg_url = os.environ.get("DATABASE_PUBLIC_URL") or os.environ.get("DATABASE_URL")
+    if not pg_url:
+        print("❌ Error: Neither DATABASE_PUBLIC_URL nor DATABASE_URL environment variable is set.")
+        sys.exit(1)
+    if pg_url.startswith("postgres://"):
+        pg_url = pg_url.replace("postgres://", "postgresql://", 1)
+
     sqlite_url = "sqlite:///cruk_datahub.db"
 
     pg_engine = create_engine(pg_url)

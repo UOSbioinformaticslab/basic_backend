@@ -4,12 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e401d040-c62c-484d-a698-f02b5402e582" name="Changes" comment=".env.example">
-      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" />
+    <list default="true" id="e401d040-c62c-484d-a698-f02b5402e582" name="Changes" comment="moving the filters">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routers/auth_router.py" beforeDir="false" afterPath="$PROJECT_DIR$/routers/auth_router.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routers/teams_router.py" beforeDir="false" afterPath="$PROJECT_DIR$/routers/teams_router.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/copy_sqlite_to_pg.py" beforeDir="false" afterPath="$PROJECT_DIR$/copy_sqlite_to_pg.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/migrate_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/migrate_db.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/migrate_is_admin_postgres.py" beforeDir="false" afterPath="$PROJECT_DIR$/migrate_is_admin_postgres.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/migrate_postgres.py" beforeDir="false" afterPath="$PROJECT_DIR$/migrate_postgres.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/restore_sqlite_from_pg.py" beforeDir="false" afterPath="$PROJECT_DIR$/restore_sqlite_from_pg.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/seed_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/seed_db.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/seed_pg.py" beforeDir="false" afterPath="$PROJECT_DIR$/seed_pg.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/test_db.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -137,7 +141,39 @@
       <option name="project" value="LOCAL" />
       <updated>1789480605654</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="improve the pending invitations">
+      <option name="closed" value="true" />
+      <created>1790075123017</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1790075123017</updated>
+    </task>
+    <task id="LOCAL-00008" summary="improve the pending invitations">
+      <option name="closed" value="true" />
+      <created>1790080032208</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1790080032208</updated>
+    </task>
+    <task id="LOCAL-00009" summary="sort out change passwords">
+      <option name="closed" value="true" />
+      <created>1790243807643</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1790243807643</updated>
+    </task>
+    <task id="LOCAL-00010" summary="moving the filters">
+      <option name="closed" value="true" />
+      <created>1790612830536</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1790612830536</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -158,6 +194,9 @@
     <MESSAGE value="enabling cleaner start up" />
     <MESSAGE value="debugging upload of projects" />
     <MESSAGE value=".env.example" />
-    <option name="LAST_COMMIT_MESSAGE" value=".env.example" />
+    <MESSAGE value="improve the pending invitations" />
+    <MESSAGE value="sort out change passwords" />
+    <MESSAGE value="moving the filters" />
+    <option name="LAST_COMMIT_MESSAGE" value="moving the filters" />
   </component>
 </project>

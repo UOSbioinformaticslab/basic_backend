@@ -1,9 +1,19 @@
 import sys
+import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import models
 
-pg_url = "postgresql://postgres:hkJiqclpUJHSsJIhDSXiMGQFOtkDTmpX@monorail.proxy.rlwy.net:20854/railway"
+load_dotenv()
+
+pg_url = os.environ.get("DATABASE_PUBLIC_URL") or os.environ.get("DATABASE_URL")
+if not pg_url:
+    print("❌ Error: Neither DATABASE_PUBLIC_URL nor DATABASE_URL environment variable is set.")
+    sys.exit(1)
+if pg_url.startswith("postgres://"):
+    pg_url = pg_url.replace("postgres://", "postgresql://", 1)
+
 engine = create_engine(pg_url)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 db = SessionLocal()

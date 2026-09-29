@@ -1,4 +1,8 @@
 cruk_datahub.db
+*.db
+*.db-wal
+*.db-shm
+*.db*
 text
 .venv/
 env/

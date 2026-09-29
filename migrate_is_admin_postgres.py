@@ -1,9 +1,18 @@
 import sys
+import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 
-DATABASE_PUBLIC_URL = "postgresql://postgres:VwveDOCnQiRDIbKecOkrUCbxWQviyYFQ@mainline.proxy.rlwy.net:31273/railway"
+load_dotenv()
+
+DATABASE_PUBLIC_URL = os.environ.get("DATABASE_PUBLIC_URL") or os.environ.get("DATABASE_URL")
+if DATABASE_PUBLIC_URL and DATABASE_PUBLIC_URL.startswith("postgres://"):
+    DATABASE_PUBLIC_URL = DATABASE_PUBLIC_URL.replace("postgres://", "postgresql://", 1)
 
 def migrate():
+    if not DATABASE_PUBLIC_URL:
+        print("❌ Error: Neither DATABASE_PUBLIC_URL nor DATABASE_URL environment variable is set.")
+        sys.exit(1)
     print("Connecting to remote Postgres database...")
     
     try:

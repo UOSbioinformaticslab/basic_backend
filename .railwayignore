@@ -4,5 +4,8 @@ env/
 __pycache__/
 cruk_datahub.db
 *.db
+*.db-wal
+*.db-shm
+*.db*
 .env
 .env.*
