@@ -234,6 +234,17 @@ class PublicationBase(BaseModel):
 class PublicationCreate(PublicationBase):
     pass
 
+class PublicationUpdate(BaseModel):
+    paper_title: Optional[str] = None
+    authors: Optional[List[Any]] = None
+    year_of_publication: Optional[str] = None
+    paper_doi: Optional[str] = None
+    journal_name: Optional[str] = None
+    abstract: Optional[str] = None
+    url: Optional[str] = None
+    team_id: Optional[int] = None
+
+
 class Publication(PublicationBase):
     id: int
     datasets: List[DatasetSimpleResponse] = []  # MUST be present

@@ -67,6 +67,16 @@ def create_publication(db: Session, pub: schemas.PublicationCreate):
     return db_publication
 
 
+def update_publication(db: Session, db_pub: models.Publication, pub_in: schemas.PublicationUpdate):
+    update_data = pub_in.dict(exclude_unset=True) if hasattr(pub_in, 'dict') else pub_in.model_dump(exclude_unset=True)
+    for key, val in update_data.items():
+        setattr(db_pub, key, val)
+    db.commit()
+    db.refresh(db_pub)
+    return db_pub
+
+
+
 def link_publication_to_project(db: Session, publication_id: str, project_id: str):
     db_link = models.PublicationHasProject(
         publication_id=publication_id,

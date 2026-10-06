@@ -85,6 +85,11 @@ def create_publication(
             detail="User must be a team admin (is_team_admin) for the active team to post publications."
         )
 
+    # Auto-detect bioRxiv DOIs if journal_name is missing or unknown
+    if pub.paper_doi and (pub.paper_doi.startswith("10.1101") or "biorxiv" in (pub.url or "").lower()):
+        if not pub.journal_name or pub.journal_name.lower().strip() in ["journal unknown", "unknown journal", "unknown", ""]:
+            pub.journal_name = "bioRxiv"
+
     # Check if publication already exists by DOI
     if pub.paper_doi:
         existing = db.query(models.Publication).filter(models.Publication.paper_doi == pub.paper_doi).first()
@@ -100,6 +105,40 @@ def create_publication(
             status_code=500,
             detail=f"Failed to save publication: {str(e)}"
         )
+
+
+@router.put("/{publication_id}", response_model=schemas.Publication)
+def update_publication_endpoint(
+        publication_id: int,
+        pub_in: schemas.PublicationUpdate,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    print("\n" + "=" * 40)
+    print(f"📥 RECEIVED PUT: UPDATE PUBLICATION #{publication_id}")
+    print(f"User: {current_user.name} (ID: {current_user.id})")
+
+    db_pub = crud.get_publication(db, publication_id=publication_id)
+    if not db_pub:
+        raise HTTPException(status_code=404, detail="Publication not found")
+
+    target_team_id = pub_in.team_id or db_pub.team_id
+    if not check_is_team_admin(db, current_user.id, target_team_id):
+        raise HTTPException(
+            status_code=403,
+            detail="User must be a team admin to update this publication."
+        )
+
+    try:
+        updated_pub = crud.update_publication(db=db, db_pub=db_pub, pub_in=pub_in)
+        return updated_pub
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update publication: {str(e)}"
+        )
+
 
 
 @router.get("/{publication_id}", response_model=schemas.Publication)
