@@ -1,7 +1,7 @@
 # routers/projects.py
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from dependencies import get_current_user
 import database, schemas, models, crud
 
@@ -77,10 +77,14 @@ def update_project(
 @router.get("/", response_model=List[schemas.ProjectResponse])
 def list_all_projects(db: Session = Depends(database.get_db)):
     """
-    Publicly accessible route to view all datasets.
+    Publicly accessible route to view all projects.
     Does NOT require a JWT token.
     """
-    return db.query(models.Project).all()
+    return db.query(models.Project).options(
+        selectinload(models.Project.datasets),
+        selectinload(models.Project.publications),
+        selectinload(models.Project.tools)
+    ).all()
 
 
 @router.delete("/{project_id}")
@@ -109,10 +113,18 @@ def delete_project(
 @router.get("/{project_pid:path}", response_model=schemas.ProjectResponse)
 def get_project(project_pid: str, db: Session = Depends(database.get_db)):
     """
-    Retrieve a specific project by its PID (which may contain slashes).
+    Retrieve a specific project by its PID (which may contain slashes) or internal ID.
     """
-    # Note: Querying by 'pid' instead of 'id' since the value is an alphanumeric string
-    db_project = db.query(models.Project).filter(models.Project.pid == project_pid).first()
+    query = db.query(models.Project).options(
+        selectinload(models.Project.datasets),
+        selectinload(models.Project.publications),
+        selectinload(models.Project.tools)
+    )
+
+    db_project = query.filter(models.Project.pid == project_pid).first()
+
+    if not db_project and project_pid.isdigit():
+        db_project = query.filter(models.Project.id == int(project_pid)).first()
 
     if not db_project:
         raise HTTPException(status_code=404, detail="Project not found")

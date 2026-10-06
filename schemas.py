@@ -175,6 +175,19 @@ class ProjectCreate(ProjectBase):
     status: str = "DRAFT"
 
 
+class PublicationSimpleResponse(BaseModel):
+    id: int
+    paper_title: str
+    year_of_publication: Optional[str] = None
+    paper_doi: Optional[str] = None
+    journal_name: Optional[str] = None
+    url: Optional[str] = None
+    authors: Optional[List[Any]] = []
+
+    class Config:
+        from_attributes = True
+
+
 class ProjectResponse(ProjectBase):
     id: int  # The internal database row number
     status: str
@@ -182,6 +195,8 @@ class ProjectResponse(ProjectBase):
     team_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
+    datasets: List[DatasetSimpleResponse] = []
+    publications: List[PublicationSimpleResponse] = []
     tools: List[ToolSimpleResponse] = []
 
     class Config:
