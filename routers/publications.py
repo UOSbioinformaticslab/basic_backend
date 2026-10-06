@@ -56,6 +56,19 @@ def delete_publication(
         )
 
 
+def check_is_team_admin(db: Session, user_id: int, team_id: int) -> bool:
+    if not user_id or not team_id:
+        return False
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if user and team_id in [t.id for t in user.teams]:
+        return True
+    link = db.query(models.user_teams).filter(
+        models.user_teams.c.user_id == user_id,
+        models.user_teams.c.team_id == team_id
+    ).first()
+    return link is not None
+
+
 @router.post("/", response_model=schemas.Publication)
 def create_publication(
         pub: schemas.PublicationCreate,
@@ -64,14 +77,12 @@ def create_publication(
 ):
     print("\n" + "=" * 40)
     print(f"📥 RECEIVED POST: CREATE PUBLICATION")
-    print(f"User: {current_user.name} (ID: {current_user.id})")
-    
-    # Optional team check based on the payload team_id vs user teams
-    user_team_ids = [team.id for team in current_user.teams]
-    if pub.team_id not in user_team_ids:
+    print(f"User: {current_user.name} (ID: {current_user.id}) | Team ID: {pub.team_id}")
+
+    if not check_is_team_admin(db, current_user.id, pub.team_id):
         raise HTTPException(
             status_code=403,
-            detail="User is not authorized to create a publication for this team."
+            detail="User must be a team admin (is_team_admin) for the active team to post publications."
         )
 
     # Check if publication already exists by DOI
@@ -89,6 +100,7 @@ def create_publication(
             status_code=500,
             detail=f"Failed to save publication: {str(e)}"
         )
+
 
 @router.get("/{publication_id}", response_model=schemas.Publication)
 def read_publication(
@@ -110,6 +122,7 @@ def read_publication(
 
 
 @router.post("/{publication_id}/datasets/{dataset_id}", response_model=schemas.PublicationHasDataset)
+@router.post("/{publication_id}/datasets/{dataset_id}/", response_model=schemas.PublicationHasDataset, include_in_schema=False)
 def link_publication_to_dataset(
         publication_id: int,
         dataset_id: int,
@@ -120,9 +133,6 @@ def link_publication_to_dataset(
     print(f"📥 RECEIVED POST: LINK PUBLICATION TO DATASET")
     print(f"User: {current_user.name} (ID: {current_user.id})")
 
-    user_team_ids = [team.id for team in current_user.teams]
-
-    # Fetch the records to check their team context
     pub = crud.get_publication(db, publication_id=publication_id)
     if not pub:
         raise HTTPException(status_code=404, detail="Publication not found")
@@ -131,29 +141,23 @@ def link_publication_to_dataset(
     if not dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
 
-    print(f"Validation Check | User Teams: {user_team_ids} | Pub Team: {pub.team_id} | Dataset Team: {dataset.team_id}")
-    print("=" * 40 + "\n")
-
-    # Validation 1: Does the user belong to the publication's team?
-    if pub.team_id not in user_team_ids:
+    target_team_id = dataset.team_id or pub.team_id
+    if not check_is_team_admin(db, current_user.id, target_team_id):
         raise HTTPException(
             status_code=403,
-            detail="User is not authorized to modify links for this publication's team."
+            detail="User must be a team admin (is_team_admin) for the active team."
         )
 
-    # Validation 2: Do the publication and dataset share the same team?
     if pub.team_id != dataset.team_id:
-        raise HTTPException(
-            status_code=400,
-            detail="Team ID mismatch. Publication and Dataset must belong to the same team."
-        )
-        # ... previous validation checks ...
+        pub.team_id = dataset.team_id
+        db.commit()
+        db.refresh(pub)
 
-    # Validation 3: Does this link already exist?
     existing_link = crud.get_publication_dataset_link(db, publication_id, dataset_id)
     if existing_link:
         print("link already existed")
         return existing_link
+
     try:
         new_link = crud.create_publication_dataset_link(db, publication_id, dataset_id)
         return new_link
@@ -164,7 +168,9 @@ def link_publication_to_dataset(
             detail=f"Failed to link publication to dataset: {str(e)}"
         )
 
+
 @router.post("/{publication_id}/projects/{project_id}", response_model=schemas.PublicationHasProject)
+@router.post("/{publication_id}/projects/{project_id}/", response_model=schemas.PublicationHasProject, include_in_schema=False)
 def link_publication_to_project(
         publication_id: int,
         project_id: int,
@@ -175,9 +181,6 @@ def link_publication_to_project(
     print(f"📥 RECEIVED POST: LINK PUBLICATION TO PROJECT")
     print(f"User: {current_user.name} (ID: {current_user.id})")
 
-    user_team_ids = [team.id for team in current_user.teams]
-
-    # Fetch the records
     pub = crud.get_publication(db, publication_id=publication_id)
     if not pub:
         raise HTTPException(status_code=404, detail="Publication not found")
@@ -186,26 +189,17 @@ def link_publication_to_project(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    print(f"Validation Check | User Teams: {user_team_ids} | Pub Team: {pub.team_id} | Project Team: {project.team_id}")
-    print("=" * 40 + "\n")
-
-    # Validation 1: Does the user belong to the publication's team?
-    if pub.team_id not in user_team_ids:
+    target_team_id = project.team_id or pub.team_id
+    if not check_is_team_admin(db, current_user.id, target_team_id):
         raise HTTPException(
             status_code=403,
-            detail="User is not authorized to modify links for this publication's team."
+            detail="User must be a team admin (is_team_admin) for this project's active team."
         )
-    else:
-        print("user belongs to publication's team")
 
-    # Validation 2: Do the publication and project share the same team?
     if pub.team_id != project.team_id:
-        raise HTTPException(
-            status_code=400,
-            detail="Team ID mismatch. Publication and Project must belong to the same team."
-        )
-    else:
-        print("publication and project share the same team")
+        pub.team_id = project.team_id
+        db.commit()
+        db.refresh(pub)
 
     existing_link = crud.get_publication_project_link(db, publication_id, project_id)
     if existing_link:
@@ -219,5 +213,5 @@ def link_publication_to_project(
         db.rollback()
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to link publication to dataset: {str(e)}"
+            detail=f"Failed to link publication to project: {str(e)}"
         )

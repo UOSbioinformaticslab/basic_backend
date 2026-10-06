@@ -1,11 +1,24 @@
 # routers/tools.py
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from dependencies import get_current_user
-import database, schemas, models
+import database, schemas, models, crud
 
 router = APIRouter(prefix="/tools", tags=["tools"])
+
+def check_is_team_admin(db: Session, user_id: int, team_id: int) -> bool:
+    if not user_id or not team_id:
+        return False
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if user and team_id in [t.id for t in user.teams]:
+        return True
+    link = db.query(models.user_teams).filter(
+        models.user_teams.c.user_id == user_id,
+        models.user_teams.c.team_id == team_id
+    ).first()
+    return link is not None
+
 
 @router.post("/", response_model=schemas.ToolResponse)
 def create_tool(
@@ -19,43 +32,55 @@ def create_tool(
             detail="No active team selected. Please select a team before saving."
         )
 
-    user_team_ids = [team.id for team in current_user.teams]
-    if tool_in.team_id not in user_team_ids:
-        raise HTTPException(status_code=403, detail="User is not a member of the specified team")
+    if not check_is_team_admin(db, current_user.id, tool_in.team_id):
+        raise HTTPException(
+            status_code=403,
+            detail="User must be a team admin (is_team_admin) for the active team to create tools."
+        )
 
-    # Compatibility with older Pydantic
-    dumped = tool_in.dict(exclude_unset=True) if hasattr(tool_in, 'dict') else tool_in.model_dump(exclude_unset=True)
-    
-    linked_datasets = dumped.pop('linked_datasets', [])
-    linked_projects = dumped.pop('linked_projects', [])
-    
-    db_tool = models.Tool(
-        **dumped,
-        user_id=current_user.id
-    )
-    db.add(db_tool)
-    db.flush()  # To get the db_tool.id
-    
-    for ds_id in linked_datasets:
-        db.add(models.ToolHasDataset(tool_id=db_tool.id, dataset_id=ds_id))
-        
-    for proj_id in linked_projects:
-        db.add(models.ToolHasProject(tool_id=db_tool.id, project_id=proj_id))
-        
-    db.commit()
-    db.refresh(db_tool)
-    return db_tool
+    return crud.create_tool(db=db, tool_in=tool_in, user_id=current_user.id)
+
 
 @router.get("/", response_model=List[schemas.ToolResponse])
-def read_tools(db: Session = Depends(database.get_db)):
-    return db.query(models.Tool).all()
+def read_tools(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(database.get_db)
+):
+    return crud.get_tools(db=db, skip=skip, limit=limit)
+
 
 @router.get("/{tool_id}", response_model=schemas.ToolResponse)
 def read_tool(tool_id: int, db: Session = Depends(database.get_db)):
-    db_tool = db.query(models.Tool).filter(models.Tool.id == tool_id).first()
+    db_tool = crud.get_tool(db=db, tool_id=tool_id)
     if not db_tool:
         raise HTTPException(status_code=404, detail="Tool not found")
     return db_tool
+
+
+@router.delete("/{tool_id}")
+def delete_tool(
+    tool_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    db_tool = crud.get_tool(db=db, tool_id=tool_id)
+    if not db_tool:
+        raise HTTPException(status_code=404, detail="Tool not found")
+
+    if not check_is_team_admin(db, current_user.id, db_tool.team_id):
+        raise HTTPException(
+            status_code=403,
+            detail="User must be a team admin (is_team_admin) for the active team to delete tools."
+        )
+
+    try:
+        crud.delete_tool(db=db, db_tool=db_tool)
+        return {"message": "Tool successfully deleted"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete tool: {str(e)}")
+
 
 @router.put("/{tool_id}", response_model=schemas.ToolResponse)
 def update_tool(
@@ -64,35 +89,17 @@ def update_tool(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    db_tool = db.query(models.Tool).filter(models.Tool.id == tool_id).first()
+    db_tool = crud.get_tool(db=db, tool_id=tool_id)
     if not db_tool:
         raise HTTPException(status_code=404, detail="Tool not found")
 
-    user_team_ids = [team.id for team in current_user.teams]
-    if db_tool.team_id not in user_team_ids:
-        raise HTTPException(status_code=403, detail="User is not a member of the tool's team")
+    if not check_is_team_admin(db, current_user.id, db_tool.team_id):
+        raise HTTPException(
+            status_code=403,
+            detail="User must be a team admin (is_team_admin) for the active team to update tools."
+        )
 
-    dumped = tool_in.dict(exclude_unset=True) if hasattr(tool_in, 'dict') else tool_in.model_dump(exclude_unset=True)
-    
-    linked_datasets = dumped.pop('linked_datasets', None)
-    linked_projects = dumped.pop('linked_projects', None)
-    
-    for key, value in dumped.items():
-        setattr(db_tool, key, value)
-        
-    if linked_datasets is not None:
-        db.query(models.ToolHasDataset).filter(models.ToolHasDataset.tool_id == tool_id).delete()
-        for ds_id in linked_datasets:
-            db.add(models.ToolHasDataset(tool_id=tool_id, dataset_id=ds_id))
-            
-    if linked_projects is not None:
-        db.query(models.ToolHasProject).filter(models.ToolHasProject.tool_id == tool_id).delete()
-        for proj_id in linked_projects:
-            db.add(models.ToolHasProject(tool_id=tool_id, project_id=proj_id))
-    
-    db.commit()
-    db.refresh(db_tool)
-    return db_tool
+    return crud.update_tool(db=db, db_tool=db_tool, tool_in=tool_in)
 
 @router.post("/{tool_id}/link/{entity_type}/{entity_id}")
 def link_tool(
@@ -105,10 +112,12 @@ def link_tool(
     db_tool = db.query(models.Tool).filter(models.Tool.id == tool_id).first()
     if not db_tool:
         raise HTTPException(status_code=404, detail="Tool not found")
-        
-    user_team_ids = [team.id for team in current_user.teams]
-    if db_tool.team_id not in user_team_ids:
-        raise HTTPException(status_code=403, detail="User is not a member of the tool's team")
+
+    if not check_is_team_admin(db, current_user.id, db_tool.team_id):
+        raise HTTPException(
+            status_code=403,
+            detail="User must be a team admin (is_team_admin) for the active team to link tools."
+        )
 
     if entity_type == 'dataset':
         link = models.ToolHasDataset(tool_id=tool_id, dataset_id=entity_id)

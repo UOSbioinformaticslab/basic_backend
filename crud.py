@@ -129,3 +129,76 @@ def get_publication_dataset_link(db: Session, publication_id: int, dataset_id: i
         models.PublicationHasDataset.publication_id == publication_id,
         models.PublicationHasDataset.dataset_id == dataset_id
     ).first()
+
+def get_publication_project_link(db: Session, publication_id: int, project_id: int):
+    return db.query(models.PublicationHasProject).filter(
+        models.PublicationHasProject.publication_id == publication_id,
+        models.PublicationHasProject.project_id == project_id
+    ).first()
+
+
+# --- Tool CRUD Functions ---
+def get_tool(db: Session, tool_id: int):
+    return db.query(models.Tool).options(
+        selectinload(models.Tool.datasets),
+        selectinload(models.Tool.projects)
+    ).filter(models.Tool.id == tool_id).first()
+
+
+def get_tools(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Tool).options(
+        selectinload(models.Tool.datasets),
+        selectinload(models.Tool.projects)
+    ).offset(skip).limit(limit).all()
+
+
+def create_tool(db: Session, tool_in: schemas.ToolCreate, user_id: int):
+    dumped = tool_in.dict(exclude_unset=True) if hasattr(tool_in, 'dict') else tool_in.model_dump(exclude_unset=True)
+    linked_datasets = dumped.pop('linked_datasets', [])
+    linked_projects = dumped.pop('linked_projects', [])
+    
+    db_tool = models.Tool(
+        **dumped,
+        user_id=user_id
+    )
+    db.add(db_tool)
+    db.flush()
+    
+    for ds_id in linked_datasets:
+        db.add(models.ToolHasDataset(tool_id=db_tool.id, dataset_id=ds_id))
+        
+    for proj_id in linked_projects:
+        db.add(models.ToolHasProject(tool_id=db_tool.id, project_id=proj_id))
+        
+    db.commit()
+    db.refresh(db_tool)
+    return db_tool
+
+
+def update_tool(db: Session, db_tool: models.Tool, tool_in: schemas.ToolCreate):
+    dumped = tool_in.dict(exclude_unset=True) if hasattr(tool_in, 'dict') else tool_in.model_dump(exclude_unset=True)
+    linked_datasets = dumped.pop('linked_datasets', None)
+    linked_projects = dumped.pop('linked_projects', None)
+    
+    for key, value in dumped.items():
+        setattr(db_tool, key, value)
+        
+    if linked_datasets is not None:
+        db.query(models.ToolHasDataset).filter(models.ToolHasDataset.tool_id == db_tool.id).delete()
+        for ds_id in linked_datasets:
+            db.add(models.ToolHasDataset(tool_id=db_tool.id, dataset_id=ds_id))
+            
+    if linked_projects is not None:
+        db.query(models.ToolHasProject).filter(models.ToolHasProject.tool_id == db_tool.id).delete()
+        for proj_id in linked_projects:
+            db.add(models.ToolHasProject(tool_id=db_tool.id, project_id=proj_id))
+    
+    db.commit()
+    db.refresh(db_tool)
+    return db_tool
+
+
+def delete_tool(db: Session, db_tool: models.Tool):
+    db.delete(db_tool)
+    db.commit()
+    return True

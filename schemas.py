@@ -46,6 +46,25 @@ class DatasetCreate(DatasetBase):
     team_id: int
 
 
+class ToolSimpleResponse(BaseModel):
+    id: int
+    name: str
+    url: Optional[str] = None
+    description: Optional[str] = None
+    results_insights: Optional[str] = None
+    license: Optional[str] = None
+    tech_stack: Optional[Any] = None
+    category_id: Optional[int] = None
+    enabled: bool = True
+    associated_authors: Optional[Any] = None
+    contact_address: Optional[str] = None
+    any_dataset: bool = False
+    status: str = "DRAFT"
+    team_id: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
 class DatasetResponse(DatasetBase):
     id: int
     datasetid: str
@@ -53,7 +72,7 @@ class DatasetResponse(DatasetBase):
     has_draft: bool = False
     created_at: datetime
     team_name: Optional[str] = None
-    tools: List[Any] = []
+    tools: List[ToolSimpleResponse] = []
 
     class Config:
         from_attributes = True
@@ -163,7 +182,7 @@ class ProjectResponse(ProjectBase):
     team_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
-    tools: List[Any] = []
+    tools: List[ToolSimpleResponse] = []
 
     class Config:
         from_attributes = True
@@ -204,7 +223,7 @@ class Publication(PublicationBase):
     id: int
     datasets: List[DatasetSimpleResponse] = []  # MUST be present
     projects: List[ProjectResponse] = []  # MUST be present
-    tools: List[Any] = [] # We'll just use Any for now or forward ref to ToolResponse
+    tools: List[ToolSimpleResponse] = []
 
     class Config:
         from_attributes = True # Use orm_mode = True if you are on Pydantic v1
@@ -253,6 +272,23 @@ class ToolBase(BaseModel):
 class ToolCreate(ToolBase):
     linked_datasets: Optional[List[int]] = []
     linked_projects: Optional[List[int]] = []
+
+class ToolUpdate(BaseModel):
+    name: Optional[str] = None
+    url: Optional[str] = None
+    description: Optional[str] = None
+    results_insights: Optional[str] = None
+    license: Optional[str] = None
+    tech_stack: Optional[Any] = None
+    category_id: Optional[int] = None
+    enabled: Optional[bool] = None
+    associated_authors: Optional[Any] = None
+    contact_address: Optional[str] = None
+    any_dataset: Optional[bool] = None
+    status: Optional[str] = None
+    team_id: Optional[int] = None
+    linked_datasets: Optional[List[int]] = None
+    linked_projects: Optional[List[int]] = None
 
 class ToolResponse(ToolBase):
     id: int

@@ -39,6 +39,23 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="CRUK Datahub")
 
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    response = JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail},
+    )
+    origin = request.headers.get("origin")
+    if origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
+
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     correlation_id = str(uuid.uuid4())
@@ -55,21 +72,32 @@ async def global_exception_handler(request: Request, exc: Exception):
         stack_trace=stack_trace
     )
 
-    return JSONResponse(
+    response = JSONResponse(
         status_code=500,
-        content={"message": "An unexpected error occurred.", "correlation_id": correlation_id},
+        content={"message": message, "stack_trace": stack_trace, "correlation_id": correlation_id},
         background=background_tasks
     )
+    origin = request.headers.get("origin")
+    if origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
+
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
         "https://crukdatahub-production.up.railway.app",
         "https://crukdatahub-staging.up.railway.app",
         "https://crukdatahub-dev.up.railway.app",
     ],
+    allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
