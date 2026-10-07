@@ -92,9 +92,19 @@ class TeamResponse(BaseModel):
     id: int
     name: str
     notification_email: Optional[str] = None
+    hdr_gateway_email: Optional[str] = None
+    introduction: Optional[str] = None
+    url: Optional[str] = None
 
     class Config:
         from_attributes = True
+
+class TeamUpdate(BaseModel):
+    name: Optional[str] = None
+    introduction: Optional[str] = None
+    notification_email: Optional[str] = None
+    hdr_gateway_email: Optional[str] = None
+    url: Optional[str] = None
 
 class TeamInvitationCreate(BaseModel):
     email: str

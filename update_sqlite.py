@@ -91,7 +91,7 @@ def run():
                                 'name': name,
                                 'notification_email': 'woollersarah@gmail.com',
                                 'hdr_gateway_email': None,
-                                'description': generate_description(name),
+                                'introduction': generate_description(name),
                                 'url': url
                             }
                             team_id_counter += 1
@@ -115,7 +115,7 @@ def run():
                             'name': name,
                             'notification_email': 'woollersarah@gmail.com',
                             'hdr_gateway_email': None,
-                            'description': generate_description(name),
+                            'introduction': generate_description(name),
                             'url': None
                         }
                         team_id_counter += 1

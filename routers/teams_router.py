@@ -9,7 +9,13 @@ router = APIRouter(prefix="/teams", tags=["teams"])
 @router.get("/")
 def get_all_teams(db: Session = Depends(database.get_db)):
     teams = db.query(models.Team).order_by(models.Team.name).all()
-    return [{"id": t.id, "name": t.name, "notification_email": t.notification_email} for t in teams]
+    return [{
+        "id": t.id, 
+        "name": t.name, 
+        "introduction": t.introduction, 
+        "notification_email": t.notification_email,
+        "url": t.url
+    } for t in teams]
 
 @router.post("/{team_id}/invitations", response_model=schemas.TeamInvitationResponse)
 def create_invitation(
@@ -333,7 +339,7 @@ def get_team_assets(team_id: int, db: Session = Depends(database.get_db)):
         "team": {
             "id": team.id, 
             "name": team.name,
-            "description": team.description,
+            "introduction": team.introduction,
             "url": team.url,
             "notification_email": team.notification_email,
             "hdr_gateway_email": team.hdr_gateway_email
@@ -354,6 +360,42 @@ def get_team(team_id: int, db: Session = Depends(database.get_db)):
         "name": team.name,
         "notification_email": team.notification_email,
         "hdr_gateway_email": team.hdr_gateway_email,
-        "description": team.description,
+        "introduction": team.introduction,
+        "url": team.url
+    }
+
+@router.put("/{team_id}")
+def update_team(
+    team_id: int, 
+    payload: schemas.TeamUpdate, 
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(dependencies.get_current_user)
+):
+    if not current_user.is_admin and team_id not in [t.id for t in current_user.teams]:
+        raise HTTPException(status_code=403, detail="Not authorized to update this team")
+        
+    team = db.query(models.Team).filter(models.Team.id == team_id).first()
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+        
+    if payload.name is not None:
+        team.name = payload.name
+    if payload.introduction is not None:
+        team.introduction = payload.introduction
+    if payload.notification_email is not None:
+        team.notification_email = payload.notification_email
+    if payload.hdr_gateway_email is not None:
+        team.hdr_gateway_email = payload.hdr_gateway_email
+    if payload.url is not None:
+        team.url = payload.url
+        
+    db.commit()
+    db.refresh(team)
+    return {
+        "id": team.id,
+        "name": team.name,
+        "introduction": team.introduction,
+        "notification_email": team.notification_email,
+        "hdr_gateway_email": team.hdr_gateway_email,
         "url": team.url
     }

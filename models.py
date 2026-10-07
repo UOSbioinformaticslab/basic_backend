@@ -39,7 +39,7 @@ class Team(Base):
     name = Column(String)
     notification_email = Column(String, nullable=True)
     hdr_gateway_email = Column(String, nullable=True)
-    description = Column(String, nullable=True)
+    introduction = Column(String, nullable=True)
     url = Column(String, nullable=True)
     datasets = relationship("Dataset", back_populates="team")
     members = relationship("User", secondary=user_teams, back_populates="teams")
