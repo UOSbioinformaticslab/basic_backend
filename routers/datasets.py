@@ -409,3 +409,83 @@ def get_matching_terms(
 
     return nested_map
 
+
+@router.post("/recommend-filters")
+def recommend_dataset_filters(
+    req: schemas.RecommendFiltersRequest,
+    db: Session = Depends(database.get_db)
+):
+    """
+    Scans dataset metadata (title, abstract, documentation, otherDataTypes, accessibility)
+    and predicts high-confidence datasetFilters matching ICD-O topography & histology rules,
+    data-type hierarchies, and access governance.
+    """
+    from helpers.filter_recommender import FilterRecommender
+    recommender = FilterRecommender(db)
+
+    metadata = req.metadata
+    if isinstance(metadata, str):
+        import json
+        try:
+            metadata = json.loads(metadata)
+        except Exception:
+            metadata = {}
+    elif not isinstance(metadata, dict):
+        metadata = {}
+
+    # If metadata has no substantive text yet, but a dataset_id is provided, try loading from the database
+    has_text = bool(
+        (metadata.get('summary') or {}).get('title') or
+        (metadata.get('summary') or {}).get('abstract') or
+        (metadata.get('documentation') or {}).get('description')
+    )
+
+    if not has_text and req.dataset_id:
+        ds = None
+        if isinstance(req.dataset_id, int) or str(req.dataset_id).isdigit():
+            ds = db.query(models.Dataset).filter(models.Dataset.id == int(req.dataset_id)).first()
+        if not ds:
+            ds = db.query(models.Dataset).filter(models.Dataset.datasetid == str(req.dataset_id)).first()
+        if ds:
+            db_meta = ds.draft_metadata_blob or ds.metadata_blob
+            if isinstance(db_meta, str):
+                import json
+                try:
+                    db_meta = json.loads(db_meta)
+                except Exception:
+                    db_meta = {}
+            if isinstance(db_meta, dict) and db_meta:
+                metadata = db_meta
+
+    if not isinstance(metadata, dict) or not metadata:
+        return {
+            "success": True,
+            "count": 0,
+            "suggestions": []
+        }
+
+    suggestions = recommender.scan_metadata(metadata)
+
+    # Do not reoffer filters that have already been accepted or are active in datasetFilters
+    existing_filter_ids = set()
+    for existing in metadata.get('datasetFilters') or []:
+        if isinstance(existing, dict) and existing.get('id'):
+            existing_filter_ids.add(str(existing['id']))
+        elif isinstance(existing, str):
+            existing_filter_ids.add(str(existing))
+
+    if existing_filter_ids:
+        suggestions = [s for s in suggestions if str(s.get('id')) not in existing_filter_ids]
+
+    # Separate direct suggestions (for cards) from silently derived filters (hierarchical parents & cross-ref)
+    direct_suggestions = [s for s in suggestions if not s.get("isDerived")]
+    silent_derived = [s for s in suggestions if s.get("isDerived")]
+
+    return {
+        "success": True,
+        "count": len(direct_suggestions),
+        "suggestions": direct_suggestions,
+        "silentDerived": silent_derived
+    }
+
+

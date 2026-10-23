@@ -1,7 +1,10 @@
-# schemas.py
 from pydantic import BaseModel, EmailStr
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
+
+class RecommendFiltersRequest(BaseModel):
+    metadata: Optional[Any] = None
+    dataset_id: Optional[Union[int, str]] = None
 
 
 class SnomedFilterResponse(BaseModel):

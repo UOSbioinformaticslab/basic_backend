@@ -1,0 +1,1480 @@
+{
+  "version": "1.0.0",
+  "description": "Taxonomy and metadata filter recommendation rules for CRUK DataHub",
+  "topography_rules": [
+    {
+      "name": "Leukaemia and Myeloma Acronyms (Bone Marrow)",
+      "filter_ids": [
+        "0_0_0_4_1"
+      ],
+      "pattern": "\\b(AML|ALL|CML|CLL|MDS)\\b",
+      "case_sensitive": true,
+      "negative_pattern": "\\b(myeloid sarcoma|granulocytic sarcoma|chloroma)\\b",
+      "matched_term": "Bone marrow (Leukaemia)",
+      "rationale": "Clinical Rule: Acute/chronic leukaemia acronyms map to C42.1 Bone marrow",
+      "is_topography": true
+    },
+    {
+      "name": "Leukaemia and Myeloma Terms (Bone Marrow)",
+      "filter_ids": [
+        "0_0_0_4_1"
+      ],
+      "pattern": "\\b(leuk[ae]emia|acute myeloid|acute lymphoblastic|chronic lymphocytic|chronic myeloid|multiple myeloma|myelodysplastic|polycythemia vera|refractory an[ae]mia)\\b",
+      "case_sensitive": false,
+      "negative_pattern": "\\b(myeloid sarcoma|granulocytic sarcoma|chloroma)\\b",
+      "matched_term": "Bone marrow (Leukaemia)",
+      "rationale": "Clinical Rule: Standard leukaemias & myelomas map to C42.1 Bone marrow",
+      "is_topography": true
+    },
+    {
+      "name": "Colorectal / Bowel",
+      "filter_ids": [
+        "0_0_0_1_3",
+        "0_0_0_1_5"
+      ],
+      "pattern": "\\b(colorectal|crc|bowel cancer|colon and rectum|colorectal cancer)\\b",
+      "matched_term": "Colorectal",
+      "rationale": "Clinical Rule: Colorectal / CRC maps to both C18 Colon and C20 Rectum",
+      "is_topography": true
+    },
+    {
+      "name": "Gastro-oesophageal Junction",
+      "filter_ids": [
+        "0_0_0_1_0",
+        "0_0_0_1_1",
+        "0_0_0_1_1_0"
+      ],
+      "pattern": "\\b(gastro[- ]?o?esophageal(\\s+junction)?|junctional\\s+(adeno)?carcinoma|esophagogastric\\s+junction|upper gastrointestinal|goj|gej|ge\\s+junction)\\b",
+      "matched_term": "Gastro-oesophageal junction",
+      "rationale": "Clinical Rule: Gastroesophageal / junctional terms map to C15 Oesophagus, C16 Stomach, and C16.0 Cardia",
+      "is_topography": true
+    },
+    {
+      "name": "Blood (Hematologic Malignancy)",
+      "filter_ids": [
+        "0_0_0_4_0"
+      ],
+      "pattern": "\\b(blood cancer|hematolog\\w* (cancer|malignancy)|haematolog\\w* (cancer|malignancy))\\b",
+      "matched_term": "Blood (Hematologic malignancy)",
+      "rationale": "ICD-O Topography match for hematological / blood cancer",
+      "is_topography": true
+    },
+    {
+      "name": "Colon",
+      "filter_ids": [
+        "0_0_0_1_3"
+      ],
+      "pattern": "\\b(colon|colonic)\\b",
+      "matched_term": "Colon",
+      "rationale": "Direct anatomical topography match for colon / colonic",
+      "is_topography": true
+    },
+    {
+      "name": "Rectum",
+      "filter_ids": [
+        "0_0_0_1_5"
+      ],
+      "pattern": "\\b(rectum|rectal)\\b",
+      "matched_term": "Rectum",
+      "rationale": "Direct anatomical topography match for rectum / rectal",
+      "is_topography": true
+    },
+    {
+      "name": "Pancreas",
+      "filter_ids": [
+        "0_0_0_1_10"
+      ],
+      "pattern": "\\b(pancreas|pancreatic)\\b",
+      "matched_term": "Pancreas",
+      "rationale": "Direct anatomical topography match for pancreas",
+      "is_topography": true
+    },
+    {
+      "name": "Breast",
+      "filter_ids": [
+        "0_0_0_9"
+      ],
+      "pattern": "\\b(breast)\\b",
+      "matched_term": "Breast",
+      "rationale": "Direct anatomical topography match for breast",
+      "is_topography": true
+    },
+    {
+      "name": "Bronchus and Lung",
+      "filter_ids": [
+        "0_0_0_2_4"
+      ],
+      "pattern": "\\b(lung|nsclc|sclc)\\b",
+      "matched_term": "Bronchus and lung",
+      "rationale": "Direct anatomical topography match for lung / NSCLC / SCLC",
+      "is_topography": true
+    },
+    {
+      "name": "Prostate Gland",
+      "filter_ids": [
+        "0_0_0_11_1"
+      ],
+      "pattern": "\\b(prostate|prostatic)\\b",
+      "matched_term": "Prostate gland",
+      "rationale": "Direct anatomical topography match for prostate",
+      "is_topography": true
+    },
+    {
+      "name": "Ovary",
+      "filter_ids": [
+        "0_0_0_10_5"
+      ],
+      "pattern": "\\b(ovary|ovarian)\\b",
+      "matched_term": "Ovary",
+      "rationale": "Direct anatomical topography match for ovary",
+      "is_topography": true
+    },
+    {
+      "name": "Liver",
+      "filter_ids": [
+        "0_0_0_1_7"
+      ],
+      "pattern": "\\b(liver|hepatic|hepato\\w*)\\b",
+      "matched_term": "Liver",
+      "rationale": "Direct anatomical topography match for liver",
+      "is_topography": true
+    },
+    {
+      "name": "Brain",
+      "filter_ids": [
+        "0_0_0_13_2"
+      ],
+      "pattern": "\\b(brain)\\b",
+      "matched_term": "Brain",
+      "rationale": "Direct anatomical topography match for brain",
+      "is_topography": true
+    },
+    {
+      "name": "Kidney",
+      "filter_ids": [
+        "0_0_0_12_0"
+      ],
+      "pattern": "\\b(kidney|renal)\\b",
+      "matched_term": "Kidney",
+      "rationale": "Direct anatomical topography match for kidney",
+      "is_topography": true
+    },
+    {
+      "name": "Bladder",
+      "filter_ids": [
+        "0_0_0_12_3"
+      ],
+      "pattern": "\\b(bladder)\\b",
+      "matched_term": "Bladder",
+      "rationale": "Direct anatomical topography match for bladder",
+      "is_topography": true
+    },
+    {
+      "name": "Skin",
+      "filter_ids": [
+        "0_0_0_5_0"
+      ],
+      "pattern": "\\b(skin|melanoma)\\b",
+      "matched_term": "Skin",
+      "rationale": "Direct anatomical topography match for skin",
+      "is_topography": true
+    },
+    {
+      "name": "Oesophagus",
+      "filter_ids": [
+        "0_0_0_1_0"
+      ],
+      "pattern": "\\b(o?esophagus|o?esophageal|o?esophagectomy)\\b",
+      "matched_term": "Oesophagus",
+      "rationale": "Direct anatomical topography match for oesophagus",
+      "is_topography": true
+    },
+    {
+      "name": "Stomach",
+      "filter_ids": [
+        "0_0_0_1_1"
+      ],
+      "pattern": "\\b(stomach|gastric|gastrectomy)\\b",
+      "matched_term": "Stomach",
+      "rationale": "Direct anatomical topography match for stomach",
+      "is_topography": true
+    },
+    {
+      "name": "Cardia",
+      "filter_ids": [
+        "0_0_0_1_1_0"
+      ],
+      "pattern": "\\b(cardia)\\b",
+      "matched_term": "Cardia, nos",
+      "rationale": "Direct anatomical topography match for cardia",
+      "is_topography": true
+    },
+    {
+      "name": "Lymph Nodes",
+      "filter_ids": [
+        "0_0_0_16"
+      ],
+      "pattern": "\\b(lymph\\s+nodes?|lymphoma)\\b",
+      "matched_term": "Lymph nodes",
+      "rationale": "Direct anatomical topography match for lymph nodes",
+      "is_topography": true
+    },
+    {
+      "name": "Cervix Uteri",
+      "filter_ids": [
+        "0_0_0_10_2"
+      ],
+      "pattern": "\\b(cervix|cervical)\\b",
+      "matched_term": "Cervix uteri",
+      "rationale": "Direct anatomical topography match for cervix",
+      "is_topography": true
+    },
+    {
+      "name": "Uterus",
+      "filter_ids": [
+        "0_0_0_10_4"
+      ],
+      "pattern": "\\b(uterus|uterine)\\b",
+      "matched_term": "Uterus, nos",
+      "rationale": "Direct anatomical topography match for uterus",
+      "is_topography": true
+    },
+    {
+      "name": "Endometrium",
+      "filter_ids": [
+        "0_0_0_10_3"
+      ],
+      "pattern": "\\b(endometrium|endometrial)\\b",
+      "matched_term": "Endometrium",
+      "rationale": "Direct anatomical topography match for endometrium",
+      "is_topography": true
+    },
+    {
+      "name": "Thyroid Gland",
+      "filter_ids": [
+        "0_0_0_14_0"
+      ],
+      "pattern": "\\b(thyroid|thyroidal)\\b",
+      "matched_term": "Thyroid gland",
+      "rationale": "Direct anatomical topography match for thyroid",
+      "is_topography": true
+    },
+    {
+      "name": "Spleen",
+      "filter_ids": [
+        "0_0_0_4_2"
+      ],
+      "pattern": "\\b(spleen|splenic)\\b",
+      "matched_term": "Spleen",
+      "rationale": "Direct anatomical topography match for spleen",
+      "is_topography": true
+    }
+  ],
+  "histology_rules": [
+    {
+      "name": "Adenomas and Adenocarcinomas",
+      "filter_ids": [
+        "0_0_1_5"
+      ],
+      "pattern": "\\b(adenocarcinoma|adenoma)\\b",
+      "matched_term": "Adenocarcinoma",
+      "rationale": "Top-level ICD-O-3 morphological family: 814-838 Adenomas and adenocarcinomas",
+      "is_histology": true
+    },
+    {
+      "name": "Squamous Cell Neoplasms",
+      "filter_ids": [
+        "0_0_1_2"
+      ],
+      "pattern": "\\bsquamous(\\s+cell)?(\\s+carcinoma)?\\b",
+      "matched_term": "Squamous cell carcinoma",
+      "rationale": "Top-level ICD-O-3 morphological family: 805-808 Squamous cell neoplasms",
+      "is_histology": true
+    },
+    {
+      "name": "Nevi and Melanomas",
+      "filter_ids": [
+        "0_0_1_15"
+      ],
+      "pattern": "\\bmelanoma\\b",
+      "matched_term": "Melanoma",
+      "rationale": "Top-level ICD-O-3 morphological family: 872-879 Nevi and melanomas",
+      "is_histology": true
+    },
+    {
+      "name": "Gliomas",
+      "filter_ids": [
+        "0_0_1_35"
+      ],
+      "pattern": "\\b(?i:glioma|glioblastoma|astrocytoma|oligodendroglioma|medulloblastoma|ependymoma)\\b|(?:(?<=[\\s,.:;(\\[])|^)(?<!\\d)(?<!\\d\\s)(MB|EPN)(?=[\\s,.:;)\\]?!]|$)",
+      "case_sensitive": true,
+      "matched_term": "Glioma",
+      "rationale": "Top-level ICD-O-3 morphological family: 938-948 Gliomas (including Medulloblastoma and Ependymoma)",
+      "is_histology": true
+    },
+    {
+      "name": "Ductal and Lobular Neoplasms",
+      "filter_ids": [
+        "0_0_1_9"
+      ],
+      "pattern": "\\b(ductal|lobular)(\\s+carcinoma)?\\b",
+      "matched_term": "Ductal and lobular carcinoma",
+      "rationale": "Top-level ICD-O-3 morphological family: 850-854 Ductal and lobular neoplasms",
+      "is_histology": true
+    },
+    {
+      "name": "Leukemias",
+      "filter_ids": [
+        "0_0_1_45"
+      ],
+      "pattern": "\\bleuk[ae]emia\\b",
+      "matched_term": "Leukaemia",
+      "rationale": "Top-level ICD-O-3 morphological family: 980-994 Leukemias",
+      "is_histology": true
+    },
+    {
+      "name": "Hodgkin and Non-Hodgkin Lymphomas",
+      "filter_ids": [
+        "0_0_1_40"
+      ],
+      "pattern": "\\blymphoma\\b",
+      "matched_term": "Lymphoma",
+      "rationale": "Top-level ICD-O-3 morphological family: 959-972 Hodgkin and non-Hodgkin lymphomas",
+      "is_histology": true
+    },
+    {
+      "name": "Mesothelial Neoplasms",
+      "filter_ids": [
+        "0_0_1_24"
+      ],
+      "pattern": "\\bmesothelioma\\b",
+      "matched_term": "Mesothelioma",
+      "rationale": "Top-level ICD-O-3 morphological family: 905 Mesothelial neoplasms",
+      "is_histology": true
+    },
+    {
+      "name": "Soft Tissue Tumors and Sarcomas",
+      "filter_ids": [
+        "0_0_1_16"
+      ],
+      "pattern": "\\bsarcoma\\b",
+      "matched_term": "Sarcoma",
+      "rationale": "Top-level ICD-O-3 morphological family: 880 Soft tissue tumors and sarcomas, NOS",
+      "is_histology": true
+    },
+    {
+      "name": "Complex Epithelial / Neuroendocrine Neoplasms",
+      "filter_ids": [
+        "0_0_1_11"
+      ],
+      "pattern": "\\b(neuroendocrine|carcinoid)\\b",
+      "matched_term": "Neuroendocrine / Carcinoid",
+      "rationale": "Top-level ICD-O-3 morphological family: 856-857 Complex epithelial neoplasms",
+      "is_histology": true
+    },
+    {
+      "name": "Basal Cell Neoplasms",
+      "filter_ids": [
+        "0_0_1_3"
+      ],
+      "pattern": "\\b(basal\\s+cell|bcc\\b)\\b",
+      "matched_term": "Basal cell neoplasms",
+      "rationale": "Top-level ICD-O-3 morphological family: 809-811 Basal cell neoplasms",
+      "is_histology": true
+    },
+    {
+      "name": "Transitional Cell Papillomas and Carcinomas",
+      "filter_ids": [
+        "0_0_1_4"
+      ],
+      "pattern": "\\b(transitional\\s+cell|urothelial)\\b",
+      "matched_term": "Transitional cell / Urothelial",
+      "rationale": "Top-level ICD-O-3 morphological family: 812-813 Transitional cell papillomas and carcinomas",
+      "is_histology": true
+    },
+    {
+      "name": "Germ Cell Neoplasms",
+      "filter_ids": [
+        "0_0_1_25"
+      ],
+      "pattern": "\\b(germ\\s+cell|seminoma|teratoma|yolk\\s+sac\\s+tumou?r)\\b",
+      "matched_term": "Germ cell neoplasms",
+      "rationale": "Top-level ICD-O-3 morphological family: 906-909 Germ cell neoplasms",
+      "is_histology": true
+    }
+  ],
+  "data_type_rules": [
+    {
+      "name": "Genomics",
+      "filter_id": "0_2_4_4_0_1",
+      "pattern": "\\b(genom\\w*|dna sequencing|whole genome|whole exome|wgs\\b|wes\\b|mutational\\s+signatures?|somatic\\s+signatures?|cosmic\\s+signatures?|signature\\s+exposures?)\\b",
+      "matched_term": "Genomics",
+      "rationale": "Detected genomic sequencing or mutation technology",
+      "parent_id": "0_2_4_4"
+    },
+    {
+      "name": "SNVs",
+      "filter_id": "0_2_4_4_0_1_0",
+      "pattern": "\\b(snvs?|single\\s+nucleotide\\s+variants?|point\\s+mutations?|somatic\\s+mutations?|somatic\\s+variants?|base\\s+(insertion[/&]deletions?\\s+and\\s+)?substitutions?|substitution\\s+mutations?)\\b",
+      "matched_term": "SNVs",
+      "rationale": "Detected single nucleotide variants (SNVs) or somatic point mutations",
+      "parent_id": "0_2_4_4_0_1"
+    },
+    {
+      "name": "Indels",
+      "filter_id": "0_2_4_4_0_1_1",
+      "pattern": "\\b(indels?|insertions?([/&]|\\s+(and|or|&)\\s+)deletions?|small\\s+insertions?\\s+and\\s+deletions?)\\b",
+      "matched_term": "Indels",
+      "rationale": "Detected insertion and deletion (indel) mutations",
+      "parent_id": "0_2_4_4_0_1"
+    },
+    {
+      "name": "CNVs",
+      "filter_id": "0_2_4_4_0_1_2",
+      "pattern": "\\b(cnvs?|copy\\s+number(\\s+(variants?|alterations?|aberrations?|gains?([/&]|\\s*(and|or|&)\\s*)losses?))?|cna\\b)\\b",
+      "matched_term": "CNVs",
+      "rationale": "Detected copy number alterations / variants (CNVs)",
+      "parent_id": "0_2_4_4_0_1"
+    },
+    {
+      "name": "Fusion Genes",
+      "filter_id": "0_2_4_4_0_1_3",
+      "pattern": "\\b(fusion\\s+genes?|gene\\s+fusions?|chromosom\\w*\\s+translocations?|genomic\\s+translocations?|balanced\\s+translocations?|translocation\\s+t\\(\\d|t\\(\\d{1,2};\\d{1,2}\\)|structural\\s+variants?|\\bSVs\\b|bedpe)\\b",
+      "matched_term": "Fusion Genes",
+      "rationale": "Detected gene fusions or genomic structural rearrangements",
+      "parent_id": "0_2_4_4_0_1"
+    },
+    {
+      "name": "Epigenomics",
+      "filter_id": "0_2_4_4_0_0",
+      "pattern": "\\b(epigenom\\w*|dna methylation|methylation|chip-seq|atac-seq|histone|methylationepic|beadchip|idat)\\b",
+      "matched_term": "Epigenomics",
+      "rationale": "Detected epigenetic profiling / DNA methylation assay",
+      "parent_id": "0_2_4_4"
+    },
+    {
+      "name": "Transcriptomics",
+      "filter_id": "0_2_4_4_0_5",
+      "pattern": "\\b(transcriptom\\w*|rna expression|rna[- ]?seq|rnaseq|mrna|gene expression|cdna|cel file|single[- ]cell|scrna|tpm\\b)\\b",
+      "matched_term": "Transcriptomics",
+      "rationale": "Detected transcriptomic / gene expression profiling",
+      "parent_id": "0_2_4_4"
+    },
+    {
+      "name": "Proteomics",
+      "filter_id": "0_2_4_4_0_4",
+      "pattern": "\\b(proteom\\w*|mass spectrometry|protein expression|phosphoproteom\\w*)\\b",
+      "matched_term": "Proteomics",
+      "rationale": "Detected proteomic profiling / mass spectrometry",
+      "parent_id": "0_2_4_4"
+    },
+    {
+      "name": "Metabolomics",
+      "filter_id": "0_2_4_4_0_2",
+      "pattern": "\\b(metabolom\\w*|metabolite|lipidom\\w*)\\b",
+      "matched_term": "Metabolomics",
+      "rationale": "Detected metabolomic profiling",
+      "parent_id": "0_2_4_4"
+    },
+    {
+      "name": "Liquid Biopsy",
+      "filter_id": "0_2_4_4_1_1",
+      "pattern": "\\b(liquid\\s+biops\\w*|cfdna|ctdna|circulating\\s+tumou?r\\s+dna|cell[- ]free\\s+dna)\\b",
+      "matched_term": "Liquid Biopsy",
+      "rationale": "Detected liquid biopsy or circulating tumor DNA (ctDNA)",
+      "parent_id": "0_2_4_4"
+    },
+    {
+      "name": "Tumour",
+      "filter_id": "0_2_4_4_1_3",
+      "pattern": "\\b(tumou?r\\s+(biops\\w*|samples?|tissues?|specimens?|blocks?|dna|rna)|matched\\s+tumou?r|primary\\s+(tumou?r|resection\\s+samples?)|tumou?r[- ]normal\\s+pairs?|patient[\\'\u2019]?s\\s+tumou?r)\\b",
+      "matched_term": "Tumour",
+      "rationale": "Detected tumour-derived molecular source material",
+      "parent_id": "0_2_4_4"
+    },
+    {
+      "name": "Control",
+      "filter_id": "0_2_4_4_1_0",
+      "pattern": "\\b(normal\\s+(control|samples?|tissue|dna|pair)|control\\s+(sample|cohort|arm|tissue)|germline|matched\\s+normal|tumou?r[- ]normal\\s+pairs?)\\b",
+      "matched_term": "Control",
+      "rationale": "Detected control / normal / germline reference source material",
+      "parent_id": "0_2_4_4"
+    },
+    {
+      "name": "bulk",
+      "filter_id": "0_2_4_4_2_0",
+      "pattern": "\\b(bulk\\s+rnaseq|bulk\\s+rna[- ]?seq|bulk\\s+sequencing|bulk\\s+tissue|bulk\\s+dna|bulk\\s+expression)\\b",
+      "matched_term": "bulk",
+      "rationale": "Detected bulk-level molecular profiling",
+      "parent_id": "0_2_4_4"
+    },
+    {
+      "name": "single cell",
+      "filter_id": "0_2_4_4_2_1",
+      "pattern": "\\b(single[- ]cell|single[- ]nucleus|scrna[- ]?seq|snrna[- ]?seq|scdna|10x\\s+genomics)\\b",
+      "matched_term": "single cell",
+      "rationale": "Detected single-cell resolution profiling",
+      "parent_id": "0_2_4_4"
+    },
+    {
+      "name": "spatial",
+      "filter_id": "0_2_4_4_2_2",
+      "pattern": "\\b(spatial\\s+transcriptom\\w*|spatial\\s+profiling|visium|merfish|cosmx|xenium)\\b",
+      "matched_term": "spatial",
+      "rationale": "Detected spatially-resolved molecular profiling",
+      "parent_id": "0_2_4_4"
+    },
+    {
+      "name": "Microscopy",
+      "filter_id": "0_2_4_2_4",
+      "pattern": "\\b(microscop\\w*|pathology\\s+slides?|digital\\s+pathology|h&e\\s+images?|digitised\\s+images?|whole\\s+slide\\s+images?|\\bwsi\\b|virtual\\s+slides?|histolog\\w*\\s+images?|tissue\\s+microarray\\s+images?)\\b",
+      "matched_term": "Microscopy",
+      "rationale": "Detected digital pathology, histology slides, or microscopy imaging",
+      "parent_id": "0_2_4_2"
+    },
+    {
+      "name": "Radiographic imaging",
+      "filter_id": "0_2_4_2_6",
+      "pattern": "\\b(radiograph\\w*|mammogram\\w*|mammograph\\w*|x[- ]ray\\w*|computed\\s+tomography|ct\\s+scans?|digital\\s+breast\\s+tomosynthesis|\\bdbt\\b)\\b",
+      "matched_term": "Radiographic imaging",
+      "rationale": "Detected radiographic imaging, mammography, X-ray, or CT scans",
+      "parent_id": "0_2_4_2"
+    },
+    {
+      "name": "Magnetic Resonance Imaging",
+      "filter_id": "0_2_4_2_2",
+      "pattern": "\\b(mri|magnetic\\s+resonance\\s+imaging|diffusion[- ]weighted\\s+mri|fmri)\\b",
+      "matched_term": "Magnetic Resonance Imaging",
+      "rationale": "Detected Magnetic Resonance Imaging (MRI)",
+      "parent_id": "0_2_4_2"
+    },
+    {
+      "name": "Nuclear medicine imaging",
+      "filter_id": "0_2_4_2_5",
+      "pattern": "\\b(nuclear\\s+medicine|pet\\s+(scan|imaging)|positron\\s+emission|spect\\s+(scan|imaging))\\b",
+      "matched_term": "Nuclear medicine imaging",
+      "rationale": "Detected nuclear medicine / PET imaging",
+      "parent_id": "0_2_4_2"
+    },
+    {
+      "name": "Fluorescence Imaging",
+      "filter_id": "0_2_4_2_1",
+      "pattern": "\\b(fluorescen\\w*(\\s+imaging)?|confocal|immunofluorescen\\w*)\\b",
+      "matched_term": "Fluorescence Imaging",
+      "rationale": "Detected fluorescence microscopy or imaging",
+      "parent_id": "0_2_4_2"
+    },
+    {
+      "name": "Ultrasonography",
+      "filter_id": "0_2_4_2_7",
+      "pattern": "\\b(ultraso\\w*|echograph\\w*|sonograph\\w*)\\b",
+      "matched_term": "Ultrasonography",
+      "rationale": "Detected ultrasound imaging",
+      "parent_id": "0_2_4_2"
+    },
+    {
+      "name": "Computational Model",
+      "filter_id": "0_2_4_0",
+      "pattern": "\\b(computational\\s+models?|machine\\s+learning(\\s+(models?|algorithms?|techniques?|software))?|deep\\s+learning(\\s+(models?|algorithms?))?|artificial\\s+intelligence(\\s+(models?|algorithms?|techniques?|software))?|ai\\s+algorithms?|predictive\\s+models?|mathematical\\s+models?|in\\s+silico(\\s+models?)?|cad\\s+models?|cad\\s+systems?|computer[- ]aided\\s+detection|neural\\s+networks?)\\b",
+      "matched_term": "Computational Model",
+      "rationale": "Detected computational, predictive, machine learning, or CAD models"
+    },
+    {
+      "name": "Immunohistochemistry",
+      "filter_id": "0_2_3_1_3",
+      "pattern": "\\b(immunohistochemistry|ihc|ihc marker|immunostaining)\\b",
+      "matched_term": "Immunohistochemistry",
+      "rationale": "Detected immunohistochemical staining / marker assays"
+    },
+    {
+      "name": "Child and Young Person",
+      "filter_id": "0_2_3_0_0",
+      "pattern": "\\b(child(ren)?|young\\s+person|young\\s+people|pediatric\\w*|paediatric\\w*|adolescent\\w*|infant\\w*|childhood\\s+cancer)\\b",
+      "matched_term": "Child and Young Person",
+      "rationale": "Detected pediatric / young patient cohort",
+      "parent_id": "0_2_3_0"
+    },
+    {
+      "name": "Seniors",
+      "filter_id": "0_2_3_0_1",
+      "pattern": "\\b(seniors?|elderly|geriatric\\w*|older\\s+adults?|older\\s+patients?|older\\s+women|advanced\\s+age|age\\s*(>=|>|\\u2265)\\s*65|(older\\s+than|aged?)\\s*(70|75|80))\\b",
+      "matched_term": "Seniors",
+      "rationale": "Detected senior / elderly patient cohort",
+      "parent_id": "0_2_3_0"
+    },
+    {
+      "name": "Family history",
+      "filter_id": "0_2_3_0_3",
+      "pattern": "\\b(family\\s+history|familial|hereditary|first[- ]degree\\s+relatives?)\\b",
+      "matched_term": "Family history",
+      "rationale": "Detected patient family history / hereditary risk data",
+      "parent_id": "0_2_3_0"
+    },
+    {
+      "name": "Lifestyle",
+      "filter_id": "0_2_3_0_4",
+      "pattern": "\\b(lifestyle|smoking\\s+(status|history)|smoker\\s+status|tobacco|alcohol\\s+consumption|dietary|pack[- ]years|bmi\\b|body\\s+mass\\s+index)\\b",
+      "matched_term": "Lifestyle",
+      "rationale": "Detected lifestyle / smoking / behavioral patient factors",
+      "parent_id": "0_2_3_0"
+    },
+    {
+      "name": "Biomarkers",
+      "filter_id": "0_2_3_1_0",
+      "pattern": "\\b(biomarkers?|molecular\\s+markers?|ihc\\s+markers?|serum\\s+markers?|prognostic\\s+markers?|predictive\\s+markers?|tumou?r\\s+mutational\\s+burden|\\btmb\\b)\\b",
+      "matched_term": "Biomarkers",
+      "rationale": "Detected molecular / prognostic biomarkers"
+    },
+    {
+      "name": "Complete blood count",
+      "filter_id": "0_2_3_1_1",
+      "pattern": "\\b(complete\\s+blood\\s+count|cbc\\b|full\\s+blood\\s+count|fbc\\b|hemoglobin|haemoglobin|platelet\\s+count)\\b",
+      "matched_term": "Complete blood count",
+      "rationale": "Detected hematology / complete blood count (CBC) data"
+    },
+    {
+      "name": "H&E-stained tissue microarrays",
+      "filter_id": "0_2_3_1_2",
+      "pattern": "\\b(tissue\\s+microarrays?|tmas?|h&e[- ]stained\\s+tissue\\s+microarrays?)\\b",
+      "matched_term": "H&E-stained tissue microarrays",
+      "rationale": "Detected tissue microarray (TMA) assays"
+    },
+    {
+      "name": "Tumour details",
+      "filter_id": "0_2_3_1_7",
+      "pattern": "\\b(tumou?r\\s+details?|tumou?r\\s+stage|pathological\\s+stage|tnm\\s+stage|tumou?r\\s+grade|histological\\s+grade|tumou?r\\s+size|margin\\s+status|differentiation\\s+grade|cancer\\s+stage\\s+at\\s+diagnosis)\\b",
+      "matched_term": "Tumour details",
+      "rationale": "Detected clinical tumour staging / grading / size parameters"
+    },
+    {
+      "name": "Response outcomes",
+      "filter_id": "0_2_3_2_1",
+      "pattern": "\\b(response\\s+outcomes?|treatment\\s+response|recist|objective\\s+response|complete\\s+response|partial\\s+response|progression[- ]free|relapse|recurrence|disease\\s+recurrence)\\b",
+      "matched_term": "Response outcomes",
+      "rationale": "Detected clinical treatment response / recurrence monitoring",
+      "parent_id": "0_2_3_2"
+    },
+    {
+      "name": "Side effects",
+      "filter_id": "0_2_3_2_2",
+      "pattern": "\\b(side\\s+effects?|adverse\\s+events?|toxicity|toxicities|ctcae|treatment[- ]related\\s+adverse)\\b",
+      "matched_term": "Side effects",
+      "rationale": "Detected adverse events or treatment toxicity recording",
+      "parent_id": "0_2_3_2"
+    },
+    {
+      "name": "Survival data",
+      "filter_id": "0_2_3_2_3",
+      "pattern": "\\b(survival\\s+data|overall\\s+survival|progression[- ]free\\s+survival|disease[- ]specific\\s+survival|survival\\s+time|mortality|follow[- ]up\\s+(time|period|duration)|survival\\s+outcomes?)\\b",
+      "matched_term": "Survival data",
+      "rationale": "Detected patient survival data or longitudinal follow-up",
+      "parent_id": "0_2_3_2"
+    },
+    {
+      "name": "Medication",
+      "filter_id": "0_2_3_3_0",
+      "pattern": "\\b(medication\\w*|chemotherap\\w*|chemo\\b|pharmacotherap\\w*|immunotherap\\w*|hormon\\w*\\s+therapy|endocrine\\s+therapy|targeted\\s+therapy|systemic\\s+therapy|drug\\s+therapy|administered\\s+drug)\\b",
+      "matched_term": "Medication",
+      "rationale": "Detected pharmacotherapy / chemotherapy / medical oncology treatment",
+      "parent_id": "0_2_3_3"
+    },
+    {
+      "name": "Organ resection and other ablations",
+      "filter_id": "0_2_3_3_1",
+      "pattern": "\\b(resection\\w*|ablat\\w*|surgery|surgical\\w*|oesophagectomy|esophagectomy|gastrectomy|mastectomy|lumpectomy|lobectomy|pneumonectomy|prostatectomy|colectomy|nephrectomy|cystectomy|oophorectomy|hysterectomy|hepatectomy|pancreatectomy|whipple|endoscopic\\s+therapy|endoscopic\\s+(mucosal\\s+)?resection|endoscopic\\s+submucosal\\s+dissection|endosc\\w*(\\s+[a-z-]+)?\\s+esd|esd(\\s+[a-z-]+)?\\s+endosc\\w*|radiofrequency\\s+ablation|rfa|cryoablation)\\b",
+      "matched_term": "Organ resection and other ablations",
+      "rationale": "Detected surgical resection / ablation / operative treatment",
+      "parent_id": "0_2_3_3"
+    },
+    {
+      "name": "Radiotherapies",
+      "filter_id": "0_2_3_3_2",
+      "pattern": "\\b(radiotherap\\w*|radiation\\s+(therapy|treatment)|chemoradiotherap\\w*|chemoradiation|brachytherapy|sbrt|imrt|ebrt|proton\\s+(beam|therapy)|external\\s+beam\\s+radiation)\\b",
+      "matched_term": "Radiotherapies",
+      "rationale": "Detected radiotherapy / radiation oncology treatment",
+      "parent_id": "0_2_3_3"
+    },
+    {
+      "name": "Phase 0",
+      "filter_id": "0_2_3_4_0",
+      "pattern": "\\b(phase\\s+(0|zero)|phase\\s+0\\s+trial)\\b",
+      "matched_term": "Phase 0",
+      "rationale": "Phase 0 clinical trial",
+      "parent_id": "0_2_3_4"
+    },
+    {
+      "name": "Phase 1",
+      "filter_id": "0_2_3_4_1",
+      "pattern": "\\b(phase\\s+(1|i|one)|phase\\s+1\\s+trial|phase\\s+i\\s+trial|phase\\s+1/2|phase\\s+i/ii)\\b",
+      "matched_term": "Phase 1",
+      "rationale": "Phase 1 clinical trial",
+      "parent_id": "0_2_3_4"
+    },
+    {
+      "name": "Phase 2",
+      "filter_id": "0_2_3_4_2",
+      "pattern": "\\b(phase\\s+(2|ii|two)|phase\\s+2\\s+trial|phase\\s+ii\\s+trial|phase\\s+2/3|phase\\s+ii/iii)\\b",
+      "matched_term": "Phase 2",
+      "rationale": "Phase 2 clinical trial",
+      "parent_id": "0_2_3_4"
+    },
+    {
+      "name": "Phase 3",
+      "filter_id": "0_2_3_4_3",
+      "pattern": "\\b(phase\\s+(3|iii|three)|phase\\s+3\\s+trial|phase\\s+iii\\s+trial)\\b",
+      "matched_term": "Phase 3",
+      "rationale": "Phase 3 clinical trial",
+      "parent_id": "0_2_3_4"
+    },
+    {
+      "name": "Phase 4",
+      "filter_id": "0_2_3_4_4",
+      "pattern": "\\b(phase\\s+(4|iv|four)|phase\\s+4\\s+trial|phase\\s+iv\\s+trial|post[- ]marketing\\s+surveillance)\\b",
+      "matched_term": "Phase 4",
+      "rationale": "Phase 4 clinical trial",
+      "parent_id": "0_2_3_4"
+    },
+    {
+      "name": "Bloods",
+      "filter_id": "0_2_0_0_0",
+      "pattern": "\\b(blood\\s+samples?|whole\\s+blood|plasma|serum|peripheral\\s+blood|pbmcs?)\\b",
+      "matched_term": "Bloods",
+      "rationale": "Detected biobank blood, serum, or plasma samples",
+      "parent_id": "0_2_0",
+      "requires_biobank_context": true
+    },
+    {
+      "name": "Tissues - eg Bone marrow aspirate",
+      "filter_id": "0_2_0_0_5",
+      "pattern": "\\b(tissue\\s+samples?|tumou?r\\s+tissues?|biopsies|frozen\\s+tissues?|ffpe|formalin[- ]fixed|bone\\s+marrow\\s+aspirates?|surgical\\s+specimens?|resected\\s+tissues?)\\b",
+      "matched_term": "Tissues - eg Bone marrow aspirate",
+      "rationale": "Detected biobank tissue specimens or biopsies",
+      "parent_id": "0_2_0",
+      "requires_biobank_context": true
+    },
+    {
+      "name": "Malignant",
+      "filter_id": "0_2_0_1_0",
+      "pattern": "\\b(malignant|tumou?r\\s+(tissue|samples?|blocks?|regions?|specimens?|biops\\w*)|patient[\\'\u2019]?s\\s+tumou?r|carcinoma\\s+samples?|cancer\\s+tissue)\\b",
+      "matched_term": "Malignant",
+      "rationale": "Detected malignant biobank sample state",
+      "parent_id": "0_2_0",
+      "requires_biobank_context": true
+    },
+    {
+      "name": "Normal",
+      "filter_id": "0_2_0_1_1",
+      "pattern": "\\b(normal\\s+tissue|normal\\s+samples?|matched\\s+normal|healthy\\s+controls?|tumou?r[- ]normal\\s+pairs?|normal\\s+and\\s+benign)\\b",
+      "matched_term": "Normal",
+      "rationale": "Detected normal / matched non-malignant biobank sample state",
+      "parent_id": "0_2_0",
+      "requires_biobank_context": true
+    },
+    {
+      "name": "In Vitro Study",
+      "filter_id": "0_2_1",
+      "pattern": "\\b(in\\s+vitro|cell\\s+lines?|organoids?|organ\\s+on\\s+a\\s+chip|2d\\s+culture|3d\\s+culture)\\b",
+      "matched_term": "In Vitro Study",
+      "rationale": "Preclinical in vitro model study"
+    },
+    {
+      "name": "Immortalised cell-line",
+      "filter_id": "0_2_1_1_0",
+      "pattern": "\\b(immortalised\\s+cell[- ]line|immortalized\\s+cell[- ]line|established\\s+cell\\s+lines?)\\b",
+      "matched_term": "Immortalised cell-line",
+      "rationale": "Detected established cell line models"
+    },
+    {
+      "name": "3D organoid (including on a chip)",
+      "filter_id": "0_2_1_0_1",
+      "pattern": "\\b(3d\\s+organoids?|patient[- ]derived\\s+organoids?|organoid\\s+cultures?)\\b",
+      "matched_term": "3D organoid (including on a chip)",
+      "rationale": "Detected 3D organoid model systems"
+    },
+    {
+      "name": "Model Organism",
+      "filter_id": "0_2_2",
+      "pattern": "\\b(model\\s+organisms?|mouse\\s+models?|murine\\s+models?|xenografts?|in\\s+vivo\\s+models?)\\b",
+      "matched_term": "Model Organism",
+      "rationale": "Preclinical animal model study"
+    },
+    {
+      "name": "Mouse",
+      "filter_id": "0_2_2_0_3",
+      "pattern": "\\b(mouse|mice|murine|c57bl/6|balb/c|nude\\s+mice|nod[- ]scid)\\b",
+      "matched_term": "Mouse",
+      "rationale": "Detected murine / mouse model"
+    },
+    {
+      "name": "Patient-Derived xenograft",
+      "filter_id": "0_2_2_1_2",
+      "pattern": "\\b(patient[- ]derived\\s+xenografts?|\\bpdx\\b)\\b",
+      "matched_term": "Patient-Derived xenograft",
+      "rationale": "Detected patient-derived xenograft (PDX) model"
+    },
+    {
+      "name": "Biobank Cells / Cell Lines",
+      "filter_id": "0_2_0_0_1",
+      "pattern": "\\b(cell\\s+lines?|cryopreserved\\s+cells?|isolated\\s+cells?|primary\\s+cells?)\\b",
+      "matched_term": "Cells - eg cell lines",
+      "rationale": "Detected biobank inventory of cell lines or cryopreserved cellular specimens",
+      "parent_id": "0_2_0",
+      "requires_biobank_context": true
+    },
+    {
+      "name": "Biobank Genetic Material",
+      "filter_id": "0_2_0_0_2",
+      "pattern": "\\b(genetic\\s+(samples?|material)|ctdna(\\s+samples?)?|circulating\\s+tumou?r\\s+dna(\\s+samples?)?|extracted\\s+(dna|rna)|genomic\\s+dna(\\s+samples?)?|total\\s+rna(\\s+samples?)?|dna\\s+aliquots?|rna\\s+aliquots?|purified\\s+nucleic\\s+acids?)\\b",
+      "matched_term": "Genetic material",
+      "rationale": "Detected biobank inventory of physical DNA/RNA, ctDNA, or nucleic acid aliquots",
+      "parent_id": "0_2_0",
+      "requires_biobank_context": true
+    },
+    {
+      "name": "Biobank Other Fluids (e.g. Urine)",
+      "filter_id": "0_2_0_0_3",
+      "pattern": "\\b(urine|saliva|ascites|cerebrospinal\\s+fluid|csf\\b|pleural\\s+fluid|synovial\\s+fluid)\\b",
+      "matched_term": "Other Fluids - eg urine",
+      "rationale": "Detected biobank inventory of non-blood bodily fluid biospecimens",
+      "parent_id": "0_2_0",
+      "requires_biobank_context": true
+    },
+    {
+      "name": "Biobank Organoids",
+      "filter_id": "0_2_0_0_4",
+      "pattern": "\\b(organoid\\s+biobank|cryopreserved\\s+organoids?|living\\s+biobank|patient[- ]derived\\s+organoids?\\s+available)\\b",
+      "matched_term": "Organoids",
+      "rationale": "Detected living biobank repository distributing patient-derived or 3D organoids",
+      "parent_id": "0_2_0",
+      "requires_biobank_context": true
+    },
+    {
+      "name": "Biobank Other - eg Swab",
+      "filter_id": "0_2_0_0_6",
+      "pattern": "\\b(swabs?|buccal\\s+swabs?|nasal\\s+swabs?|skin\\s+swabs?|hair\\s+follicles?|nail\\s+clippings?)\\b",
+      "matched_term": "Other - eg swab",
+      "rationale": "Detected biobank inventory of swab, buccal, or atypical physical specimens",
+      "parent_id": "0_2_0",
+      "requires_biobank_context": true
+    },
+    {
+      "name": "Biobank Pre-cancerous State",
+      "filter_id": "0_2_0_1_2",
+      "pattern": "\\b(pre-?cancerous|premalignan\\w*|dysplasia|dysplastic|barrett\\'?s\\s+(esophagus|oesophagus)|adenomatous\\s+polyps?|carcinoma\\s+in\\s+situ|cin\\b)\\b",
+      "matched_term": "Pre-cancerous",
+      "rationale": "Detected biobank specimens from pre-malignant, dysplastic, or in situ lesions",
+      "parent_id": "0_2_0",
+      "requires_biobank_context": true
+    },
+    {
+      "name": "Organ on a Chip",
+      "filter_id": "0_2_1_0_0",
+      "pattern": "\\b(organ-?on-?(a-?)?chips?|microphysiological\\s+systems?|microfluidic\\s+cell\\s+culture\\s+chips?|mops\\b)\\b",
+      "matched_term": "Organ on a Chip",
+      "rationale": "Detected microphysiological engineered organ-on-a-chip or microfluidic culture model",
+      "parent_id": "0_2_1"
+    },
+    {
+      "name": "Organ Slice Culture",
+      "filter_id": "0_2_1_0_2",
+      "pattern": "\\b(organotypic\\s+slice(\\s+cultures?)?|precision-cut\\s+([a-z-]+\\s+)?slices?|(tissue|tumou?r|liver|lung|heart|kidney|pancreas|brain|colon|prostate|breast|ovarian|gastric|skin)\\s+slice\\s+cultures?|slice\\s+cultures?|pcts\\b)\\b",
+      "matched_term": "Organ slice",
+      "rationale": "Detected in vitro study utilizing precision-cut organotypic or tissue slice cultures",
+      "parent_id": "0_2_1"
+    },
+    {
+      "name": "Patient Derived (In Vitro)",
+      "filter_id": "0_2_1_1_1",
+      "pattern": "\\b(patient-?derived(\\s+[a-z-]+)?\\s*(cells?|cell\\s+lines?|cultures?|organoids?|models?|tumou?rs?)?|pdc\\b|pdo\\b|primary\\s+patient\\s+cells?|(cells?|cultures?|organoids?|lines?)\\s+(derived|established|isolated|harvested)\\s+from\\s+(patients?|subjects?|human\\s+tumou?rs?|biops(y|ies)|surgical\\s+resections?))\\b",
+      "matched_term": "Patient derived",
+      "rationale": "Detected in vitro model derived directly from clinical patient specimens",
+      "parent_id": "0_2_1"
+    },
+    {
+      "name": "Model Organism Derived (In Vitro)",
+      "filter_id": "0_2_1_1_2",
+      "pattern": "\\b((mouse|murine|rat|canine|dog|rabbit|drosophila|fruit\\s+fly|chicken|chick|avian|yeast|saccharomyces|pombe|zebrafish|xenograft|model\\s+organism|animal)-derived(\\s+[a-z-]+)?\\s*(cells?|cell\\s+lines?|cultures?|lines?|organoids?|models?|fibroblasts?|strains?)?|model\\s+organism[- ]derived|(cells?|cell\\s+lines?|cultures?|lines?|organoids?|fibroblasts?|strains?)\\s+(derived|isolated|harvested|established)\\s+from\\s+(mice|mouse|murine|rats?|canine|dogs?|rabbits?|drosophila|fruit\\s+fl(y|ies)|chick(en)?s?|yeast|saccharomyces|pombe|zebrafish|animals?|model\\s+organisms?|transgenic\\s+(mice|animals?)|xenografts?))\\b",
+      "matched_term": "Model Organism derived",
+      "rationale": "Detected in vitro cultures, cell lines, or strains derived from animal/yeast model organism hosts",
+      "parent_id": "0_2_1"
+    },
+    {
+      "name": "In Vitro Cell & Cell-Derived Treatment",
+      "filter_id": "0_2_1_2_0",
+      "pattern": "\\b(cell[- ]based\\s+therap\\w*|cell-?derived\\s+treatment|extracellular\\s+vesicles?|exosomes?(\\s+treatment)?|car[- ]t(\\s+cells?)?|adoptive\\s+cell\\s+transfer|t[- ]cell\\s+cytotoxicity\\s+assay)\\b",
+      "matched_term": "Cell and cell-derived treatment",
+      "rationale": "Detected in vitro treatments utilizing cells, engineered T-cells, extracellular vesicles, or exosomes",
+      "parent_id": "0_2_1",
+      "requires_in_vitro_context": true
+    },
+    {
+      "name": "In Vitro Gene Knock-Down",
+      "filter_id": "0_2_1_2_1",
+      "pattern": "\\b(gene\\s+knock-?downs?|knock-?down|sirna|shrna|crispr(-cas9?)?|crispri|gene\\s+silenc\\w*|rnai|antisense\\s+oligonucleotides?|aso\\b)\\b",
+      "matched_term": "Gene knock-down",
+      "rationale": "Detected in vitro genetic perturbation or gene knock-down using siRNA, shRNA, CRISPR/Cas9, or RNAi",
+      "parent_id": "0_2_1",
+      "requires_in_vitro_context": true
+    },
+    {
+      "name": "In Vitro Medication / Drug Treatment",
+      "filter_id": "0_2_1_2_2",
+      "pattern": "\\b(pharmacological\\s+(treatment|inhibition|exposure|intervention)|drug\\s+(treatment|screening|exposure|dosing|response|sensitivity)|chemotherapy\\s+in\\s+vitro|small\\s+molecule\\s+inhibit\\w*|compound\\s+screen\\w*|ic50\\b|ec50\\b)\\b",
+      "matched_term": "Medication",
+      "rationale": "Detected in vitro pharmacological drug treatment, chemical compound screen, or small-molecule exposure",
+      "parent_id": "0_2_1",
+      "requires_in_vitro_context": true
+    },
+    {
+      "name": "In Vitro Radiation",
+      "filter_id": "0_2_1_2_3",
+      "pattern": "\\b(in\\s+vitro\\s+radiation|gamma[- ]irradiat\\w*|x[- ]ray\\s+irradiat\\w*|radiosensiti\\w*|radiation\\s+exposure\\s+in\\s+vitro|irradiat\\w*\\s+cells?|clonogenic\\s+survival\\s+assay)\\b",
+      "matched_term": "Radiation",
+      "rationale": "Detected in vitro experimental radiation exposure or irradiation protocols",
+      "parent_id": "0_2_1",
+      "requires_in_vitro_context": true
+    },
+    {
+      "name": "Model Organism: Chicken",
+      "filter_id": "0_2_2_0_0",
+      "pattern": "\\b(chicken\\w*|chick\\w*|avian|gallus\\s+gallus|cam\\s+assay|chorioallantoic\\s+membrane)\\b",
+      "matched_term": "Chicken",
+      "rationale": "Detected avian / chick embryo / chicken model",
+      "parent_id": "0_2_2"
+    },
+    {
+      "name": "Model Organism: Dog",
+      "filter_id": "0_2_2_0_1",
+      "pattern": "\\b(canine|dog\\w*|canis\\s+lupus)\\b",
+      "matched_term": "Dog",
+      "rationale": "Detected canine / dog model",
+      "parent_id": "0_2_2"
+    },
+    {
+      "name": "Model Organism: Fruit Fly",
+      "filter_id": "0_2_2_0_2",
+      "pattern": "\\b(drosophila(\\s+melanogaster)?|fruit\\s+fl(y|ies))\\b",
+      "matched_term": "Fruit fly",
+      "rationale": "Detected Drosophila / fruit fly model",
+      "parent_id": "0_2_2"
+    },
+    {
+      "name": "Model Organism: Rabbit",
+      "filter_id": "0_2_2_0_4",
+      "pattern": "\\b(rabbits?(\\s+(models?|xenografts?|experiments?|studies|study|cohorts?|strains?))|in\\s+rabbits?|rabbits?\\s+(were|was)\\s+(used|treated|injected|implanted|housed|inoculated|sacrificed|monitored)|new\\s+zealand\\s+white|oryctolagus\\s+cuniculus|leporine|vx2)\\b",
+      "matched_term": "Rabbit",
+      "rationale": "Detected rabbit in vivo model (Idea B)",
+      "parent_id": "0_2_2"
+    },
+    {
+      "name": "Model Organism: Rat",
+      "filter_id": "0_2_2_0_5",
+      "pattern": "\\b(rat\\b|rats\\b|rattus|sprague[- ]dawley|wistar|fischer\\s+344)\\b",
+      "matched_term": "Rat",
+      "rationale": "Detected rat model",
+      "parent_id": "0_2_2"
+    },
+    {
+      "name": "Model Organism: Saccharomyces cerevisiae",
+      "filter_id": "0_2_2_0_6",
+      "pattern": "\\b((saccharomyces\\s+cerevisiae|baker\\'?s\\s+yeast|budding\\s+yeast)(\\s+(models?|cultures?|strains?|cells?|colon(y|ies)|experiments?|mutants?))|in\\s+(saccharomyces\\s+cerevisiae|yeast))\\b",
+      "matched_term": "Saccharomyces cerevisiae",
+      "rationale": "Detected Saccharomyces cerevisiae (budding yeast) experimental model",
+      "parent_id": "0_2_2"
+    },
+    {
+      "name": "Model Organism: Schizosaccharomyces pombe",
+      "filter_id": "0_2_2_0_7",
+      "pattern": "\\b(schizosaccharomyces(\\s+pombe)?|s\\.?\\s*pombe|fission\\s+yeast)\\b",
+      "matched_term": "Schizosaccharomyces pombe",
+      "rationale": "Detected fission yeast model organism Schizosaccharomyces pombe",
+      "parent_id": "0_2_2"
+    },
+    {
+      "name": "Model Organism: Genetically Engineered",
+      "filter_id": "0_2_2_1_0",
+      "pattern": "\\b(gemm\\b|genetically\\s+engineered(\\s+mouse)?|transgenic|knock-?out\\s+(mice|model|animals?)|conditional\\s+knockout|crispr[- ]engineered\\s+(mice|animals?)|cre[- ]lox)\\b",
+      "matched_term": "Genetically engineered",
+      "rationale": "Detected genetically engineered, transgenic, or knockout animal model (GEMM)",
+      "parent_id": "0_2_2",
+      "requires_model_organism_context": true
+    },
+    {
+      "name": "Model Organism: Immuno-Compromised",
+      "filter_id": "0_2_2_1_1",
+      "pattern": "\\b(nude\\s+mice|scid\\s+mice|nsg\\s+mice|nod[- ]scid|immunodeficient|immunocompromised(\\s+mice|\\s+animals?)?|athymic)\\b",
+      "matched_term": "Immuno-compromised",
+      "rationale": "Detected immunocompromised / immunodeficient host model (nude, SCID, NSG, NOD-SCID)",
+      "parent_id": "0_2_2",
+      "requires_model_organism_context": true
+    },
+    {
+      "name": "Model Organism: Syngeneic",
+      "filter_id": "0_2_2_1_3",
+      "pattern": "\\b(syngeneic|allografts?(\\s+in\\s+mice)?|immunocompetent\\s+(mouse|animal)\\s+models?)\\b",
+      "matched_term": "Syngeneic",
+      "rationale": "Detected syngeneic or immunocompetent animal model",
+      "parent_id": "0_2_2",
+      "requires_model_organism_context": true
+    },
+    {
+      "name": "Model Organism: Biomarkers",
+      "filter_id": "0_2_2_2_0",
+      "pattern": "\\b(circulating\\s+biomarkers?|serum\\s+biomarkers?|tumou?r\\s+markers?|surrogate\\s+markers?|biomarker\\s+kinetics)\\b",
+      "matched_term": "Biomarkers",
+      "rationale": "Detected biological marker measurements in animal model",
+      "parent_id": "0_2_2",
+      "requires_model_organism_context": true
+    },
+    {
+      "name": "Model Organism: Flow Cytometry",
+      "filter_id": "0_2_2_2_1",
+      "pattern": "\\b(flow\\s+cytometr\\w*|facs\\b|fluorescence[- ]activated\\s+cell\\s+sorting)\\b",
+      "matched_term": "Flow Cytometry",
+      "rationale": "Detected flow cytometry / FACS analysis in model organism study",
+      "parent_id": "0_2_2",
+      "requires_model_organism_context": true
+    },
+    {
+      "name": "Model Organism: Immunohistochemistry",
+      "filter_id": "0_2_2_2_2",
+      "pattern": "\\b(immunohistochem\\w*|ihc\\b|immunofluorescence\\s+staining|fluorescence\\s+microscopy)\\b",
+      "matched_term": "Immunohistochemistry",
+      "rationale": "Detected immunohistochemistry / tissue staining in model organism study",
+      "parent_id": "0_2_2",
+      "requires_model_organism_context": true
+    },
+    {
+      "name": "Model Organism: Behavioural Data",
+      "filter_id": "0_2_2_3_0",
+      "pattern": "\\b(behaviou?ral\\s+(tests?|assays?|data|testing|monitoring)|rotarod|morris\\s+water\\s+maze|open\\s+field|locomotor\\s+activity|novel\\s+object|forced\\s+swim)\\b",
+      "matched_term": "Behavioural data",
+      "rationale": "Detected behavioral or neuro-functional testing in model organisms",
+      "parent_id": "0_2_2",
+      "requires_model_organism_context": true
+    },
+    {
+      "name": "Model Organism: Clinical Observations",
+      "filter_id": "0_2_2_3_1",
+      "pattern": "\\b(cage[- ]side\\s+observations?|body\\s+weight\\s+monitoring|body\\s+condition\\s+score|humane\\s+endpoints?|clinical\\s+score|morbidity\\s+monitoring)\\b",
+      "matched_term": "Clinical observations",
+      "rationale": "Detected clinical health tracking, weight monitoring, or cage-side signs in animal cohort",
+      "parent_id": "0_2_2",
+      "requires_model_organism_context": true
+    },
+    {
+      "name": "Model Organism: Response Outcomes",
+      "filter_id": "0_2_2_3_2",
+      "pattern": "\\b(tumou?r\\s+(growth\\s+inhibition|tgi|regression|volume|stasis|burden|shrinkage)|caliper\\s+measurements?|response\\s+outcomes?)\\b",
+      "matched_term": "Response outcomes",
+      "rationale": "Detected tumor growth kinetics, caliper volume, or therapeutic response in animal model",
+      "parent_id": "0_2_2",
+      "requires_model_organism_context": true
+    },
+    {
+      "name": "Model Organism: Side Effects",
+      "filter_id": "0_2_2_3_3",
+      "pattern": "\\b((?i:adverse\\s+(effects?|reactions?)|toxicity\\s+monitoring|tolerability|side\\s+effects?|weight\\s+loss\\s+toxicity|organ\\s+toxicity|maximum\\s+tolerated\\s+dose)|MTD)\\b",
+      "matched_term": "Side effects",
+      "rationale": "Detected tolerability, systemic toxicity, or adverse reactions in model organism study",
+      "parent_id": "0_2_2",
+      "requires_model_organism_context": true,
+      "case_sensitive": true
+    },
+    {
+      "name": "Model Organism: Survival Data",
+      "filter_id": "0_2_2_3_4",
+      "pattern": "\\b(overall\\s+survival|median\\s+survival|survival\\s+(curves?|analysis|data|endpoints?)|kaplan[- ]meier\\s+survival)\\b",
+      "matched_term": "Survival data",
+      "rationale": "Detected survival analysis, Kaplan-Meier curves, or endpoint tracking in model organism study",
+      "parent_id": "0_2_2",
+      "requires_model_organism_context": true
+    },
+    {
+      "name": "Model Organism: Medication",
+      "filter_id": "0_2_2_4_0",
+      "pattern": "\\b((?i:medications?|oral\\s+gavage|intraperitoneal\\s+injection|intravenous\\s+injection|subcutaneous\\s+injection|drug\\s+(dosing|administration|treatment)|systemic\\s+therapy|chemotherapeutic\\s+regimen)|IP|IV|SC)\\b",
+      "matched_term": "Medication",
+      "rationale": "Detected in vivo medication, oral gavage, IP/IV injection, or chemotherapeutic dosing",
+      "parent_id": "0_2_2",
+      "requires_model_organism_context": true,
+      "case_sensitive": true
+    },
+    {
+      "name": "Model Organism: Cell and Cell-Derived Treatments",
+      "filter_id": "0_2_2_4_1",
+      "pattern": "\\b((?i:adoptive\\s+(cell|t[- ]cell)\\s+transfer|car[- ]t(\\s+infusion|\\s+injection|\\s+treatment)?|stem\\s+cell\\s+transplant\\w*|bone\\s+marrow\\s+transplant\\w*|exosome\\s+injection)|ACT)\\b",
+      "matched_term": "Cell and cell-derived treatments",
+      "rationale": "Detected in vivo cellular therapy, adoptive cell transfer, or CAR-T infusion in model organism",
+      "parent_id": "0_2_2",
+      "requires_model_organism_context": true,
+      "case_sensitive": true
+    },
+    {
+      "name": "Model Organism: Micro-biome Alterations",
+      "filter_id": "0_2_2_4_2",
+      "pattern": "\\b((?i:fecal\\s+microbiota\\s+transplant\\w*|microbiome\\s+alteration|antibiotic\\s+depletion(\\s+of\\s+gut\\s+microbiota)?|germ[- ]free|gnotobiotic)|FMT)\\b",
+      "matched_term": "Micro-biome alterations",
+      "rationale": "Detected in vivo microbiome manipulation (FMT, antibiotic gut clearing, or germ-free colonization)",
+      "parent_id": "0_2_2",
+      "requires_model_organism_context": true,
+      "case_sensitive": true
+    },
+    {
+      "name": "Model Organism: Organ Resection and Ablations",
+      "filter_id": "0_2_2_4_3",
+      "pattern": "\\b((?i:surgical\\s+resection|tumou?r\\s+excision|cryoablation|radiofrequency\\s+ablation|splenectomy|hepatectomy|nephrectomy|surgical\\s+removal\\s+of\\s+tumou?r)|RFA)\\b",
+      "matched_term": "Organ resection and other ablations",
+      "rationale": "Detected in vivo surgical resection, tumor excision, or ablation in model organism",
+      "parent_id": "0_2_2",
+      "requires_model_organism_context": true,
+      "case_sensitive": true
+    },
+    {
+      "name": "Model Organism: Radiotherapies",
+      "filter_id": "0_2_2_4_4",
+      "pattern": "\\b((?i:focal\\s+tumou?r\\s+irradiation|stereotactic\\s+radiotherapy|fractionated\\s+radiation|in\\s+vivo\\s+radiation|animal\\s+irradiation|whole[- ]body\\s+irradiation)|WBI)\\b",
+      "matched_term": "Radiotherapies",
+      "rationale": "Detected in vivo radiation therapy or tumor irradiation delivered to animal subjects",
+      "parent_id": "0_2_2",
+      "requires_model_organism_context": true,
+      "case_sensitive": true
+    },
+    {
+      "name": "Patient Study: Quality of Life",
+      "filter_id": "0_2_3_0_5",
+      "pattern": "\\b((?i:quality\\s+of\\s+life|socioeconomic\\s+status|employment\\s+status|educational\\s+attainment|work\\s+productivity)|QoL|HRQoL|HR-QoL)\\b",
+      "matched_term": "Quality of life (eg Education and/or employment)",
+      "rationale": "Detected clinical patient demographic measures: health-related quality of life, employment, education",
+      "parent_id": "0_2_3",
+      "case_sensitive": true
+    },
+    {
+      "name": "Patient Study: Kidney Function Tests",
+      "filter_id": "0_2_3_1_4",
+      "pattern": "\\b((?i:kidney\\s+function|renal\\s+function|serum\\s+creatinine|estimated\\s+glomerular\\s+filtration|blood\\s+urea\\s+nitrogen)|eGFR|BUN)\\b",
+      "matched_term": "Kidney function tests",
+      "rationale": "Detected clinical laboratory tests evaluating kidney / renal performance (creatinine, eGFR, BUN)",
+      "parent_id": "0_2_3",
+      "case_sensitive": true
+    },
+    {
+      "name": "Patient Study: Liver Function Tests",
+      "filter_id": "0_2_3_1_5",
+      "pattern": "\\b((?i:liver\\s+function\\s+tests?|alanine\\s+transaminase|aspartate\\s+transaminase|serum\\s+bilirubin|alkaline\\s+phosphatase)|LFTs?|ALT|AST|ALP)\\b",
+      "matched_term": "Liver function tests",
+      "rationale": "Detected clinical laboratory hepatic panel (ALT, AST, ALP, total bilirubin)",
+      "parent_id": "0_2_3",
+      "case_sensitive": true
+    },
+    {
+      "name": "Patient Study: Other Bodily Fluid Analyses",
+      "filter_id": "0_2_3_1_6",
+      "pattern": "\\b((?i:peritoneal\\s+fluid|cerebrospinal\\s+fluid|pleural\\s+fluid|synovial\\s+fluid|ascitic\\s+tap|pleural\\s+effusion\\s+cytology|bodily\\s+fluid\\s+analysis)|CSF)\\b",
+      "matched_term": "Other bodily fluid analyses",
+      "rationale": "Detected clinical fluid cytology or biochemical analysis (CSF, pleural fluid, ascites)",
+      "parent_id": "0_2_3",
+      "case_sensitive": true
+    },
+    {
+      "name": "Patient Study: Urine Tests",
+      "filter_id": "0_2_3_1_8",
+      "pattern": "\\b(urinalysis|urine\\s+(chemistry|tests?|samples?|cytology|protein|sediment)|urinary\\s+(biomarkers?|protein|albumin|excretion))\\b",
+      "matched_term": "Urine tests",
+      "rationale": "Detected clinical urinalysis, urine cytology, or urinary biomarker testing",
+      "parent_id": "0_2_3"
+    },
+    {
+      "name": "Patient Study: Patient-Reported Outcomes",
+      "filter_id": "0_2_3_2_0",
+      "pattern": "\\b((?i:patient[- ]reported\\s+outcomes?|patient[- ]reported\\s+symptoms?|symptom\\s+questionnaires?)|PROMs?|EORTC(\\s+QLQ[- ]C30)?|FACIT|SF-36|EQ-5D)\\b",
+      "matched_term": "Patient-Reported Outcomes",
+      "rationale": "Detected patient-reported outcome measures (PROMs, EORTC QLQ, FACIT, SF-36)",
+      "parent_id": "0_2_3",
+      "case_sensitive": true
+    },
+    {
+      "name": "Techniques: Crystallography",
+      "filter_id": "0_2_4_1",
+      "pattern": "\\b(crystallograph\\w*|x[- ]ray\\s+diffraction|protein\\s+crystals?|crystal\\s+structures?)\\b",
+      "matched_term": "Crystallography",
+      "rationale": "Detected macromolecular X-ray crystallography or protein crystal structure technique",
+      "parent_id": "0_2_4"
+    },
+    {
+      "name": "Techniques: Bioluminescence Imaging",
+      "filter_id": "0_2_4_2_0",
+      "pattern": "\\b((?i:bioluminescen\\w*|luciferase(\\s+imaging|\\s+reporter|\\s+assay)?)|BLI)\\b",
+      "matched_term": "Bioluminescence Imaging",
+      "rationale": "Detected optical bioluminescence or luciferase imaging",
+      "parent_id": "0_2_4_2",
+      "case_sensitive": true
+    },
+    {
+      "name": "Techniques: Medical Photography",
+      "filter_id": "0_2_4_2_3",
+      "pattern": "\\b(medical\\s+photograph\\w*|clinical\\s+photograph\\w*|dermoscop\\w*|gross\\s+photograph\\w*|intraoperative\\s+photograph\\w*|dermatoscopic\\s+images?)\\b",
+      "matched_term": "Medical photography",
+      "rationale": "Detected clinical medical photography, dermoscopy, or gross pathology photography",
+      "parent_id": "0_2_4_2"
+    },
+    {
+      "name": "Techniques: Mechanobiology",
+      "filter_id": "0_2_4_3",
+      "pattern": "\\b((?i:mechanobiolog\\w*|atomic\\s+force\\s+microscop\\w*|traction\\s+force\\s+microscop\\w*|cell\\s+stiffness|substrate\\s+rigidity|shear\\s+stress\\s+assay|elastic\\s+modulus)|AFM|TFM)\\b",
+      "matched_term": "Mechanobiology",
+      "rationale": "Detected biophysical mechanobiology, atomic force microscopy (AFM), or stiffness measurement",
+      "parent_id": "0_2_4",
+      "case_sensitive": true
+    },
+    {
+      "name": "Techniques: Metagenomics",
+      "filter_id": "0_2_4_4_0_3",
+      "pattern": "\\b(metagenom\\w*|16s\\s+rrna(\\s+sequencing)?|shotgun\\s+metagenom\\w*|microbiome\\s+sequenc\\w*|microbial\\s+community\\s+profil\\w*)\\b",
+      "matched_term": "Metagenomics",
+      "rationale": "Detected metagenomic DNA sequencing (16S rRNA or shotgun metagenomics)",
+      "parent_id": "0_2_4_4"
+    },
+    {
+      "name": "Techniques: Other Multi-omic Source",
+      "filter_id": "0_2_4_4_1_2",
+      "pattern": "\\b((?i:environmental\\s+dna|microbial\\s+isolates?|forensic\\s+dna|non[- ]human\\s+source)|eDNA)\\b",
+      "matched_term": "Other",
+      "rationale": "Detected atypical multi-omic source (environmental DNA, microbial isolates, or forensic specimens)",
+      "parent_id": "0_2_4_4",
+      "case_sensitive": true
+    },
+    {
+      "name": "Techniques: Nanomaterials",
+      "filter_id": "0_2_4_5",
+      "pattern": "\\b(nanomaterials?|nanoparticles?|nanocarriers?|liposomes?|nanomedicine|polymeric\\s+nanoparticles?|gold\\s+nanoparticles?|nanostructures?|nano-?vesicles?)\\b",
+      "matched_term": "Nanomaterials",
+      "rationale": "Detected nanoscale materials, nanoparticles, liposomes, or nanocarrier technologies",
+      "parent_id": "0_2_4"
+    },
+    {
+      "name": "Techniques: Spectroscopy",
+      "filter_id": "0_2_4_6",
+      "pattern": "\\b((?i:spectroscop\\w*|mass\\s+spectrometr\\w*|mass\\s+spectroscopy|spectrophotometr\\w*|raman\\s+spectroscop\\w*|infrared\\s+spectroscop\\w*)|LC[- ]MS(/MS)?|GC[- ]MS|MALDI[- ]TOF|MS/MS|NMR|FTIR)\\b",
+      "matched_term": "Spectroscopy",
+      "rationale": "Detected analytical spectroscopy, mass spectrometry (LC-MS, MALDI-TOF), or NMR spectroscopy",
+      "parent_id": "0_2_4",
+      "case_sensitive": true
+    }
+  ],
+  "parent_category_rules": [
+    {
+      "name": "Multi-omic Data Parent",
+      "filter_id": "0_2_4_4",
+      "trigger_prefixes": [
+        "0_2_4_4_"
+      ],
+      "fallback_pattern": "\\b(genom\\w*|transcriptom\\w*|epigenom\\w*|multi[- ]?omic|sequencing|wes|wgs)\\b",
+      "matched_term": "Multi-omic Data",
+      "rationale": "Parent category for molecular omic profiling"
+    },
+    {
+      "name": "Imaging Data Parent",
+      "filter_id": "0_2_4_2",
+      "trigger_prefixes": [
+        "0_2_4_2_"
+      ],
+      "check_imaging_formats": true,
+      "fallback_pattern": "\\b(imaging|mammogram|pathology\\s+slides?|digitised\\s+images?|dicom|tiff|scans?)\\b",
+      "matched_term": "Imaging Data",
+      "rationale": "Detected medical, radiographic, or digital pathology imaging"
+    },
+    {
+      "name": "Demographics Parent",
+      "filter_id": "0_2_3_0",
+      "trigger_prefixes": [
+        "0_2_3_0_"
+      ],
+      "fallback_pattern": "\\b(demograph\\w*|seniors?|lifestyle|family\\s+history|pediatric\\w*|ages?\\s+of)\\b",
+      "matched_term": "Demographics",
+      "rationale": "Patient demographic variables collected"
+    },
+    {
+      "name": "Longitudinal Follow up Parent",
+      "filter_id": "0_2_3_2",
+      "trigger_prefixes": [
+        "0_2_3_2_"
+      ],
+      "fallback_pattern": "\\b(patient\\s+follow[- ]up|clinical\\s+follow[- ]up|longitudinal\\s+(cohort|patient|clinical|study\\s+of\\s+patients?)|overall\\s+survival|progression[- ]free|relapse\\s+rate|recurrence\\s+free|clinical\\s+outcomes?|post[- ]treatment\\s+follow[- ]up|median\\s+follow[- ]up)\\b",
+      "matched_term": "Longitudinal Follow up",
+      "rationale": "Longitudinal patient follow-up and clinical endpoints"
+    },
+    {
+      "name": "Treatments Parent",
+      "filter_id": "0_2_3_3",
+      "trigger_prefixes": [
+        "0_2_3_3_"
+      ],
+      "fallback_pattern": "\\b(treatment\\w*|chemotherap\\w*|radiotherap\\w*|surgery|standard\\s+of\\s+care|therapy\\s+records?)\\b",
+      "matched_term": "Treatments",
+      "rationale": "Clinical treatments and therapeutic interventions"
+    },
+    {
+      "name": "Clinical Trial Parent",
+      "filter_id": "0_2_3_4",
+      "trigger_prefixes": [
+        "0_2_3_4_"
+      ],
+      "fallback_pattern": "\\b(clinical\\s+trials?|phase\\s+[0-4]|phase\\s+i{1,3})\\b",
+      "matched_term": "Clinical Trial",
+      "rationale": "Interventional clinical trial data"
+    },
+    {
+      "name": "Patient Study Parent",
+      "filter_id": "0_2_3",
+      "trigger_prefixes": [
+        "0_2_3_"
+      ],
+      "fallback_pattern": "\\b(patient\\s+study|clinical\\s+trial|cohort|patients?)\\b",
+      "matched_term": "Patient study",
+      "rationale": "Parent category for clinical patient cohort studies"
+    },
+    {
+      "name": "Biobank Samples Parent",
+      "filter_id": "0_2_0",
+      "trigger_prefixes": [
+        "0_2_0_"
+      ],
+      "fallback_pattern": "\\b(bio-?samples?|biological\\s+samples?|biobank\\w*|biorepositor\\w*|tissue\\s+bank\\w*|(samples?|blocks?|vials?|aliquots?)\\s+available|available\\s+(samples?|blocks?|vials?|aliquots?))\\b",
+      "matched_term": "Biobank Samples",
+      "rationale": "Detected physical biobank repository or physical specimen availability"
+    }
+  ],
+  "access_rules": [
+    {
+      "name": "Open Access",
+      "filter_id": "0_1_0",
+      "pattern": "\\b(open access|publicly available|cc-by|unrestricted|public access)\\b",
+      "matched_term": "Open Access",
+      "rationale": "Identified open access / CC-BY governance terms"
+    },
+    {
+      "name": "Managed DAC Access",
+      "filter_id": "0_1_1",
+      "pattern": "\\b(data access committee|dac|formal application|managed access|restricted access|controlled access)\\b",
+      "matched_term": "Managed DAC Access",
+      "rationale": "Identified Data Access Committee (DAC) requirements"
+    },
+    {
+      "name": "Collaboration Required",
+      "filter_id": "0_1_2",
+      "pattern": "\\b(academic\\s+collaboration\\s+required|collaboration\\s+required|collaborative\\s+agreement|must\\s+collaborate|joint\\s+publication\\s+required|contact\\s+pi\\s+for\\s+collaboration)\\b",
+      "matched_term": "Collaboration Required",
+      "rationale": "Identified mandatory academic research collaboration requirement"
+    },
+    {
+      "name": "Not-for-profit Use Only",
+      "filter_id": "0_1_3",
+      "pattern": "\\b(not-for-profit|non-commercial|academic use only)\\b",
+      "matched_term": "Not-for-profit",
+      "rationale": "Identified non-commercial / academic use restrictions"
+    }
+  ],
+  "hierarchy": {
+    "0_2_4_4_0_1_0": "0_2_4_4_0_1",
+    "0_2_4_4_0_1_1": "0_2_4_4_0_1",
+    "0_2_4_4_0_1_2": "0_2_4_4_0_1",
+    "0_2_4_4_0_1_3": "0_2_4_4_0_1",
+    "0_2_4_4_0_1": "0_2_4_4",
+    "0_2_4_4_0_0": "0_2_4_4",
+    "0_2_4_4_0_5": "0_2_4_4",
+    "0_2_4_4_0_4": "0_2_4_4",
+    "0_2_4_4_0_2": "0_2_4_4",
+    "0_2_4_4_1_1": "0_2_4_4",
+    "0_2_4_4_1_3": "0_2_4_4",
+    "0_2_4_4_1_0": "0_2_4_4",
+    "0_2_4_4_2_0": "0_2_4_4",
+    "0_2_4_4_2_1": "0_2_4_4",
+    "0_2_4_4_2_2": "0_2_4_4",
+    "0_2_4_2_4": "0_2_4_2",
+    "0_2_4_2_6": "0_2_4_2",
+    "0_2_4_2_2": "0_2_4_2",
+    "0_2_4_2_5": "0_2_4_2",
+    "0_2_4_2_1": "0_2_4_2",
+    "0_2_4_2_7": "0_2_4_2",
+    "0_2_3_0_0": "0_2_3_0",
+    "0_2_3_0_1": "0_2_3_0",
+    "0_2_3_0_3": "0_2_3_0",
+    "0_2_3_0_4": "0_2_3_0",
+    "0_2_3_0": "0_2_3",
+    "0_2_3_1_0": "0_2_3",
+    "0_2_3_1_1": "0_2_3",
+    "0_2_3_1_2": "0_2_3",
+    "0_2_3_1_3": "0_2_3",
+    "0_2_3_1_7": "0_2_3",
+    "0_2_3_2_1": "0_2_3_2",
+    "0_2_3_2_2": "0_2_3_2",
+    "0_2_3_2_3": "0_2_3_2",
+    "0_2_3_2": "0_2_3",
+    "0_2_3_3_0": "0_2_3_3",
+    "0_2_3_3_1": "0_2_3_3",
+    "0_2_3_3_2": "0_2_3_3",
+    "0_2_3_3": "0_2_3",
+    "0_2_3_4_0": "0_2_3_4",
+    "0_2_3_4_1": "0_2_3_4",
+    "0_2_3_4_2": "0_2_3_4",
+    "0_2_3_4_3": "0_2_3_4",
+    "0_2_3_4_4": "0_2_3_4",
+    "0_2_3_4": "0_2_3",
+    "0_2_0_0_0": "0_2_0",
+    "0_2_0_0_5": "0_2_0",
+    "0_2_0_1_0": "0_2_0",
+    "0_2_0_1_1": "0_2_0",
+    "0_2_0_0_1": "0_2_0",
+    "0_2_0_0_2": "0_2_0",
+    "0_2_0_0_3": "0_2_0",
+    "0_2_0_0_4": "0_2_0",
+    "0_2_0_0_6": "0_2_0",
+    "0_2_0_1_2": "0_2_0",
+    "0_2_1_0_0": "0_2_1",
+    "0_2_1_0_2": "0_2_1",
+    "0_2_1_1_1": "0_2_1",
+    "0_2_1_1_2": "0_2_1",
+    "0_2_1_2_0": "0_2_1",
+    "0_2_1_2_1": "0_2_1",
+    "0_2_1_2_2": "0_2_1",
+    "0_2_1_2_3": "0_2_1",
+    "0_2_2_0_0": "0_2_2",
+    "0_2_2_0_1": "0_2_2",
+    "0_2_2_0_2": "0_2_2",
+    "0_2_2_0_4": "0_2_2",
+    "0_2_2_0_5": "0_2_2",
+    "0_2_2_0_6": "0_2_2",
+    "0_2_2_0_7": "0_2_2",
+    "0_2_2_1_0": "0_2_2",
+    "0_2_2_1_1": "0_2_2",
+    "0_2_2_1_3": "0_2_2",
+    "0_2_2_2_0": "0_2_2",
+    "0_2_2_2_1": "0_2_2",
+    "0_2_2_2_2": "0_2_2",
+    "0_2_2_3_0": "0_2_2",
+    "0_2_2_3_1": "0_2_2",
+    "0_2_2_3_2": "0_2_2",
+    "0_2_2_3_3": "0_2_2",
+    "0_2_2_3_4": "0_2_2",
+    "0_2_2_4_0": "0_2_2",
+    "0_2_2_4_1": "0_2_2",
+    "0_2_2_4_2": "0_2_2",
+    "0_2_2_4_3": "0_2_2",
+    "0_2_2_4_4": "0_2_2",
+    "0_2_3_0_5": "0_2_3_0",
+    "0_2_3_1_4": "0_2_3",
+    "0_2_3_1_5": "0_2_3",
+    "0_2_3_1_6": "0_2_3",
+    "0_2_3_1_8": "0_2_3",
+    "0_2_3_2_0": "0_2_3_2",
+    "0_2_4_1": "0_2_4",
+    "0_2_4_2_0": "0_2_4_2",
+    "0_2_4_2_3": "0_2_4_2",
+    "0_2_4_3": "0_2_4",
+    "0_2_4_4_0_3": "0_2_4_4_0",
+    "0_2_4_4_1_2": "0_2_4_4_1",
+    "0_2_4_5": "0_2_4",
+    "0_2_4_6": "0_2_4"
+  }
+}
