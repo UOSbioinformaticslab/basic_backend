@@ -172,7 +172,7 @@
     {
       "name": "Skin",
       "filter_ids": [
-        "0_0_0_5_0"
+        "0_0_0_5"
       ],
       "pattern": "\\b(skin|melanoma)\\b",
       "matched_term": "Skin",
