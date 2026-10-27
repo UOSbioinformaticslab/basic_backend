@@ -434,10 +434,15 @@ def recommend_dataset_filters(
         metadata = {}
 
     # If metadata has no substantive text yet, but a dataset_id is provided, try loading from the database
+    eff_meta = metadata.get('metadata_blob') if isinstance(metadata.get('metadata_blob'), dict) else metadata
     has_text = bool(
-        (metadata.get('summary') or {}).get('title') or
-        (metadata.get('summary') or {}).get('abstract') or
-        (metadata.get('documentation') or {}).get('description')
+        (eff_meta.get('summary') or {}).get('title') or
+        (eff_meta.get('summary') or {}).get('abstract') or
+        (eff_meta.get('documentation') or {}).get('description') or
+        eff_meta.get('title') or
+        eff_meta.get('name') or
+        eff_meta.get('abstract') or
+        eff_meta.get('description')
     )
 
     if not has_text and req.dataset_id:

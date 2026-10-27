@@ -26,16 +26,17 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", "..", "ai", "ai-
 
 
 _RULES_CACHE: Optional[Dict[str, Any]] = None
+_RULES_CACHE_MTIME: float = 0.0
+_RULES_CACHE_PATH: Optional[str] = None
 
 
 def load_filter_rules(rules_path: Optional[str] = None) -> Dict[str, Any]:
     """
     Loads and caches filter recommendation rules from JSON.
     Searches common paths if no explicit path is provided.
+    Automatically reloads if the underlying rules file has been modified on disk.
     """
-    global _RULES_CACHE
-    if rules_path is None and _RULES_CACHE is not None:
-        return _RULES_CACHE
+    global _RULES_CACHE, _RULES_CACHE_MTIME, _RULES_CACHE_PATH
 
     candidate_paths = []
     if rules_path:
@@ -63,11 +64,25 @@ def load_filter_rules(rules_path: Optional[str] = None) -> Dict[str, Any]:
             f"Could not locate 'filter_rules.json'. Searched candidate paths: {candidate_paths}"
         )
 
+    # If already cached and rules file has not changed on disk, return cache
+    if rules_path is None and _RULES_CACHE is not None and _RULES_CACHE_PATH == resolved_path:
+        try:
+            current_mtime = os.path.getmtime(resolved_path)
+            if current_mtime <= _RULES_CACHE_MTIME:
+                return _RULES_CACHE
+        except Exception:
+            return _RULES_CACHE
+
     with open(resolved_path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     if rules_path is None:
         _RULES_CACHE = data
+        _RULES_CACHE_PATH = resolved_path
+        try:
+            _RULES_CACHE_MTIME = os.path.getmtime(resolved_path)
+        except Exception:
+            _RULES_CACHE_MTIME = 0.0
     return data
 
 
@@ -228,16 +243,25 @@ class FilterRecommender:
         Zero hallucination: Field names and text snippets are sliced directly from actual dictionary values.
         """
         flags = 0 if case_sensitive else re.IGNORECASE
-        summary = metadata.get('summary', {}) or {}
-        doc = metadata.get('documentation', {}) or {}
-        access = (metadata.get('accessibility', {}) or {}).get('access', {}) or {}
-        usage = (metadata.get('accessibility', {}) or {}).get('usage', {}) or {}
+        effective_metadata = metadata
+        if 'metadata_blob' in metadata and isinstance(metadata['metadata_blob'], dict):
+            effective_metadata = {**metadata['metadata_blob'], **metadata}
+
+        summary = effective_metadata.get('summary', {}) or {}
+        doc = effective_metadata.get('documentation', {}) or {}
+        access = (effective_metadata.get('accessibility', {}) or {}).get('access', {}) or {}
+        usage = (effective_metadata.get('accessibility', {}) or {}).get('usage', {}) or {}
+
+        title_val = summary.get('title', '') or effective_metadata.get('title', '') or effective_metadata.get('name', '') or ''
+        abstract_val = summary.get('abstract', '') or effective_metadata.get('abstract', '') or ''
+        keywords_val = ", ".join([str(k) for k in (summary.get('keywords') or effective_metadata.get('keywords') or []) if k])
+        doc_val = doc.get('description', '') or effective_metadata.get('description', '') or ''
 
         fields_to_check = [
-            ("summary.title", summary.get('title', '')),
-            ("summary.abstract", summary.get('abstract', '')),
-            ("summary.keywords", ", ".join(summary.get('keywords') or [])),
-            ("documentation.description", doc.get('description', '')),
+            ("summary.title", title_val),
+            ("summary.abstract", abstract_val),
+            ("summary.keywords", keywords_val),
+            ("documentation.description", doc_val),
             ("accessibility.access.accessRights", access.get('accessRights', '')),
             ("accessibility.usage.dataUseRequirements", ", ".join(usage.get('dataUseRequirements') or [])),
             ("accessibility.usage.dataUseLimitation", ", ".join(usage.get('dataUseLimitation') or []))
@@ -335,19 +359,23 @@ class FilterRecommender:
 
     def _extract_text_corpus(self, metadata: Dict[str, Any]) -> tuple[str, str, List[Dict[str, Any]]]:
         """Builds both raw-case and lowercase textual corpora from user metadata for pattern matching."""
-        summary = metadata.get('summary', {}) or {}
-        doc = metadata.get('documentation', {}) or {}
-        accessibility = metadata.get('accessibility', {}) or {}
+        effective_metadata = metadata
+        if 'metadata_blob' in metadata and isinstance(metadata['metadata_blob'], dict):
+            effective_metadata = {**metadata['metadata_blob'], **metadata}
+
+        summary = effective_metadata.get('summary', {}) or {}
+        doc = effective_metadata.get('documentation', {}) or {}
+        accessibility = effective_metadata.get('accessibility', {}) or {}
         access = accessibility.get('access', {}) or {}
         usage = accessibility.get('usage', {}) or {}
-        other_data_types = metadata.get('otherDataTypes', []) or []
-        structural = metadata.get('structuralMetadata', {}) or {}
+        other_data_types = effective_metadata.get('otherDataTypes', []) or []
+        structural = effective_metadata.get('structuralMetadata', {}) or {}
 
-        title = summary.get('title', '') or ''
-        abstract = summary.get('abstract', '') or ''
-        keywords_list = summary.get('keywords', []) or []
+        title = summary.get('title', '') or effective_metadata.get('title', '') or effective_metadata.get('name', '') or ''
+        abstract = summary.get('abstract', '') or effective_metadata.get('abstract', '') or ''
+        keywords_list = summary.get('keywords', []) or effective_metadata.get('keywords', []) or []
         keywords = " ".join([str(k) for k in keywords_list if k])
-        doc_desc = doc.get('description', '') or ''
+        doc_desc = doc.get('description', '') or effective_metadata.get('description', '') or ''
         access_rights = access.get('accessRights', '') or ''
         data_use_req = " ".join(usage.get('dataUseRequirements', []) or [])
         data_use_lim = " ".join(usage.get('dataUseLimitation', []) or [])
@@ -520,10 +548,11 @@ class FilterRecommender:
         # Check if any cancer topography is mentioned in the dataset/paper title
         # (in DataHub metadata, this corresponds to metadata_blob.summary.title / summary.title)
         title_topography_rules = []
-        summary_dict = metadata.get('summary', {}) or {}
-        if not summary_dict and isinstance(metadata.get('metadata_blob'), dict):
-            summary_dict = metadata.get('metadata_blob', {}).get('summary', {}) or {}
-        title_str = str(summary_dict.get('title', '') or metadata.get('title', '') or '')
+        eff_meta = metadata
+        if 'metadata_blob' in metadata and isinstance(metadata['metadata_blob'], dict):
+            eff_meta = {**metadata['metadata_blob'], **metadata}
+        summary_dict = eff_meta.get('summary', {}) or {}
+        title_str = str(summary_dict.get('title', '') or eff_meta.get('title', '') or eff_meta.get('name', '') or '')
 
         if title_str:
             for rule in self.rules.get("topography_rules", []):
@@ -635,6 +664,52 @@ class FilterRecommender:
                                     )
             except Exception:
                 pass
+
+        # 7. PAN-CANCER FALLBACK TRIGGER
+        # If no specific cancer type (topography, histology, or cross-referenced term) was detected in metadata,
+        # automatically trigger Pan Cancer (0_0_5) so every dataset receives an applicable cancer classification.
+        has_specific_cancer = any(
+            fid.startswith('0_0') and fid not in ('0_0', '0_0_5')
+            for fid in recommended_filters
+        )
+        if not has_specific_cancer and '0_0_5' not in recommended_filters and '0_0_5' not in rejected_set:
+            has_existing_cancer = any(
+                (isinstance(f, dict) and str(f.get('id', '')).startswith('0_0') and str(f.get('id', '')) not in ('0_0', '0_0_5')) or
+                (isinstance(f, str) and f.startswith('0_0') and f not in ('0_0', '0_0_5'))
+                for f in ((metadata or {}).get('datasetFilters') or [])
+            )
+            if not has_existing_cancer:
+                generic_match = re.search(r'\b(cancers?|tumou?rs?|malignan\w*|oncolog\w*)\b', raw_text, re.IGNORECASE)
+                if generic_match:
+                    fallback_ev = self._build_evidence(
+                        metadata,
+                        r'\b(cancers?|tumou?rs?|malignan\w*|oncolog\w*)\b',
+                        generic_match.group(0),
+                        rule_rationale="Triggered automatically because no specific cancer type was identified in metadata"
+                    )
+                else:
+                    fallback_ev = {
+                        "sourceField": "summary.abstract",
+                        "snippet": "No specific cancer type identified in metadata; defaulted to Pan Cancer.",
+                        "expandedSnippet": "No specific cancer type identified in metadata; defaulted to Pan Cancer.",
+                        "matchedTerm": "Pan Cancer",
+                        "instancesInMetadata": 1,
+                        "ruleRationale": "Triggered automatically because no specific cancer type was identified in metadata",
+                        "allInstances": [
+                            {
+                                "sourceField": "summary.abstract",
+                                "snippet": "No specific cancer type identified in metadata; defaulted to Pan Cancer.",
+                                "expandedSnippet": "No specific cancer type identified in metadata; defaulted to Pan Cancer.",
+                                "matchedText": "Pan Cancer"
+                            }
+                        ]
+                    }
+                recommended_filters['0_0_5'] = self._to_filter_dict(
+                    '0_0_5',
+                    default_label='Pan Cancer',
+                    evidence=fallback_ev,
+                    is_derived=False
+                )
 
         # Final Cascading Rejection Filter Check
         final_results = []

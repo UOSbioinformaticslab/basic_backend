@@ -85,6 +85,18 @@ def populate_filters_table():
             json.dumps(item.get("path", []))
         ))
 
+    # Ensure 0_0_5 Pan Cancer filter is included
+    if "0_0_5" not in filter_dict:
+        records_to_insert.append((
+            "0_0_5",
+            "Pan Cancer",
+            "cancerTypes",
+            "cancer-type",
+            "applies to multiple cancer types.",
+            "0_0",
+            json.dumps(["0_0", "0_0_5"])
+        ))
+
     cursor.executemany("""
         INSERT INTO filters (id, label, category, primaryGroup, description, parentId, path)
         VALUES (?, ?, ?, ?, ?, ?, ?)

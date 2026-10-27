@@ -7,28 +7,62 @@ def sync_postgres_sequences():
     if engine.dialect.name == "postgresql":
         try:
             with engine.begin() as conn:
+                # 1. Query the Postgres catalog directly for sequences linked to 'id' columns in public schema
                 query = text("""
-                    SELECT c.table_name 
-                    FROM information_schema.columns c
-                    WHERE c.table_schema = 'public' 
-                      AND c.column_name = 'id'
-                      AND c.data_type IN ('integer', 'bigint', 'smallint')
-                      AND pg_get_serial_sequence(c.table_name, 'id') IS NOT NULL;
+                    SELECT 
+                        t.relname AS table_name,
+                        s.relname AS sequence_name
+                    FROM pg_class s
+                    JOIN pg_depend d ON d.objid = s.oid AND d.classid = 'pg_class'::regclass AND d.refclassid = 'pg_class'::regclass
+                    JOIN pg_class t ON t.oid = d.refobjid
+                    JOIN pg_namespace n ON n.oid = t.relnamespace
+                    JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = d.refobjsubid
+                    WHERE s.relkind = 'S'
+                      AND n.nspname = 'public'
+                      AND a.attname = 'id';
                 """)
-                result = conn.execute(query)
-                tables = [row[0] for row in result.fetchall()]
-                for table in tables:
+                rows = conn.execute(query).fetchall()
+                synced_tables = set()
+                for table, seq in rows:
                     try:
-                        seq_sql = text(f"""
+                        conn.execute(text(f"""
                             SELECT setval(
-                                pg_get_serial_sequence('{table}', 'id'),
-                                COALESCE((SELECT MAX(id) FROM "{table}"), 0) + 1,
+                                'public."{seq}"',
+                                COALESCE((SELECT MAX(id) FROM public."{table}"), 0) + 1,
                                 false
                             );
-                        """)
-                        conn.execute(seq_sql)
+                        """))
+                        synced_tables.add(table)
                     except Exception as e:
                         print(f"Skipped sequence sync for table '{table}': {e}")
+
+                # 2. Fallback check for any base tables in 'public' with integer 'id' columns not caught by catalog join
+                fallback_query = text("""
+                    SELECT table_name 
+                    FROM information_schema.tables 
+                    WHERE table_schema = 'public' 
+                      AND table_type = 'BASE TABLE';
+                """)
+                all_tables = [r[0] for r in conn.execute(fallback_query).fetchall()]
+                for table in all_tables:
+                    if table in synced_tables:
+                        continue
+                    try:
+                        seq_res = conn.execute(
+                            text("SELECT pg_get_serial_sequence(:tbl, 'id')"),
+                            {"tbl": f'public."{table}"'}
+                        ).scalar()
+                        if seq_res:
+                            conn.execute(text(f"""
+                                SELECT setval(
+                                    :seq,
+                                    COALESCE((SELECT MAX(id) FROM public."{table}"), 0) + 1,
+                                    false
+                                );
+                            """), {"seq": seq_res})
+                    except Exception:
+                        pass # Ignore tables without sequence or without id column
+
             print("✅ PostgreSQL sequence synchronization complete.")
         except Exception as e:
             print(f"⚠️ PostgreSQL sequence sync warning: {e}")

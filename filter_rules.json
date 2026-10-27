@@ -3,6 +3,17 @@
   "description": "Taxonomy and metadata filter recommendation rules for CRUK DataHub",
   "topography_rules": [
     {
+      "name": "Pan Cancer",
+      "filter_ids": [
+        "0_0_5"
+      ],
+      "pattern": "\\b(pan[- ]?cancer|pan[- ]?tumou?r|multi[- ]?(cancer|tumou?r|organ)|across\\s+(multiple|diverse|all)\\s+(cancers|tumou?rs|malignancies)|(diverse|many|many different|multiple)\\s+cancers?|pan[- ]?disease|pancancer)\\b",
+      "case_sensitive": false,
+      "matched_term": "Pan Cancer",
+      "rationale": "Matches datasets spanning multiple or generalized cancer types",
+      "is_topography": true
+    },
+    {
       "name": "Leukaemia and Myeloma Acronyms (Bone Marrow)",
       "filter_ids": [
         "0_0_0_4_1"
@@ -575,9 +586,9 @@
     {
       "name": "Computational Model",
       "filter_id": "0_2_4_0",
-      "pattern": "\\b(computational\\s+models?|machine\\s+learning(\\s+(models?|algorithms?|techniques?|software))?|deep\\s+learning(\\s+(models?|algorithms?))?|artificial\\s+intelligence(\\s+(models?|algorithms?|techniques?|software))?|ai\\s+algorithms?|predictive\\s+models?|mathematical\\s+models?|in\\s+silico(\\s+models?)?|cad\\s+models?|cad\\s+systems?|computer[- ]aided\\s+detection|neural\\s+networks?)\\b",
+      "pattern": "\\b(computational\\s+(models?|frameworks?)|machine\\s+learning(\\s+(models?|algorithms?|techniques?|software))?|deep\\s+learning(\\s+(models?|algorithms?))?|artificial\\s+intelligence(\\s+(models?|algorithms?|techniques?|software))?|ai\\s+(algorithms?|agents?)|agentic(\\s+(reasoning|ai|framework|models?|workflows?))?|large\\s+language\\s+models?|llms?|predictive\\s+models?|mathematical\\s+models?|in\\s+silico(\\s+models?)?|cad\\s+models?|cad\\s+systems?|computer[- ]aided\\s+detection|neural\\s+networks?)\\b",
       "matched_term": "Computational Model",
-      "rationale": "Detected computational, predictive, machine learning, or CAD models"
+      "rationale": "Detected computational, predictive, AI/agentic, machine learning, or CAD models"
     },
     {
       "name": "Immunohistochemistry",
@@ -681,7 +692,7 @@
     {
       "name": "Organ resection and other ablations",
       "filter_id": "0_2_3_3_1",
-      "pattern": "\\b(resection\\w*|ablat\\w*|surgery|surgical\\w*|oesophagectomy|esophagectomy|gastrectomy|mastectomy|lumpectomy|lobectomy|pneumonectomy|prostatectomy|colectomy|nephrectomy|cystectomy|oophorectomy|hysterectomy|hepatectomy|pancreatectomy|whipple|endoscopic\\s+therapy|endoscopic\\s+(mucosal\\s+)?resection|endoscopic\\s+submucosal\\s+dissection|endosc\\w*(\\s+[a-z-]+)?\\s+esd|esd(\\s+[a-z-]+)?\\s+endosc\\w*|radiofrequency\\s+ablation|rfa|cryoablation)\\b",
+      "pattern": "\\b(resection\\w*|(radiofrequency|thermal|cryo|microwave|laser|catheter|endometrial|surgical|tumou?r)\\s+ablation\\w*|ablation\\s+therap\\w*|cryoablation|surgery|surgical\\w*|oesophagectomy|esophagectomy|gastrectomy|mastectomy|lumpectomy|lobectomy|pneumonectomy|prostatectomy|colectomy|nephrectomy|cystectomy|oophorectomy|hysterectomy|hepatectomy|pancreatectomy|whipple|endoscopic\\s+therapy|endoscopic\\s+(mucosal\\s+)?resection|endoscopic\\s+submucosal\\s+dissection|endosc\\w*(\\s+[a-z-]+)?\\s+esd|esd(\\s+[a-z-]+)?\\s+endosc\\w*|rfa)\\b",
       "matched_term": "Organ resection and other ablations",
       "rationale": "Detected surgical resection / ablation / operative treatment",
       "parent_id": "0_2_3_3"
@@ -1170,7 +1181,7 @@
     {
       "name": "Patient Study: Other Bodily Fluid Analyses",
       "filter_id": "0_2_3_1_6",
-      "pattern": "\\b((?i:peritoneal\\s+fluid|cerebrospinal\\s+fluid|pleural\\s+fluid|synovial\\s+fluid|ascitic\\s+tap|pleural\\s+effusion\\s+cytology|bodily\\s+fluid\\s+analysis)|CSF)\\b",
+      "pattern": "\\b((?i:peritoneal\\s+fluid|cerebrospinal\\s+fluid|pleural\\s+fluid|synovial\\s+fluid|ascitic\\s+tap|pleural\\s+effusion\\s+cytology|bodily\\s+fluid\\s+analysis)|(?<![A-Za-z]-)CSF(?!-[A-Za-z]))\\b",
       "matched_term": "Other bodily fluid analyses",
       "rationale": "Detected clinical fluid cytology or biochemical analysis (CSF, pleural fluid, ascites)",
       "parent_id": "0_2_3",
