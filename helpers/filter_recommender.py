@@ -107,8 +107,41 @@ class FilterRecommender:
             try:
                 filters = self.db.query(models.Filter).all()
                 self.filter_by_id = {f.id: f for f in filters}
+                return
             except Exception:
                 self.filter_by_id = {}
+
+        # Fallback: connect to cruk_datahub.db directly to load filter labels & parent hierarchies
+        try:
+            import sqlite3
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            db_candidates = [
+                os.path.join(base_dir, "..", "cruk_datahub.db"),
+                os.path.join(os.getcwd(), "basic", "basic_backend", "cruk_datahub.db"),
+                os.path.join(os.getcwd(), "cruk_datahub.db")
+            ]
+            for db_p in db_candidates:
+                if os.path.isfile(db_p):
+                    conn = sqlite3.connect(f"file:{db_p}?mode=ro", uri=True)
+                    c = conn.cursor()
+                    c.execute("SELECT id, label, category, primaryGroup, description, parentId, path FROM filters;")
+                    class SimpleFilter:
+                        def __init__(self, fid, label, category, primaryGroup, description, parentId, path):
+                            self.id = fid
+                            self.label = "Data Type" if label == "dataType" else label
+                            self.category = category or ""
+                            self.primaryGroup = primaryGroup or ""
+                            self.description = description or ""
+                            self.parentId = parentId
+                            self.path = json.loads(path) if path else []
+                    self.filter_by_id = {
+                        row[0]: SimpleFilter(row[0], row[1], row[2], row[3], row[4], row[5], row[6]) 
+                        for row in c.fetchall()
+                    }
+                    conn.close()
+                    break
+        except Exception:
+            pass
 
     def _precompile_rules(self):
         """Pre-compiles regex patterns defined in the ingested JSON rules for maximum performance."""
@@ -187,10 +220,10 @@ class FilterRecommender:
         """Converts a Filter ID or SQLAlchemy model into a standardized DatasetFilter JSON dict."""
         filter_model = self.filter_by_id.get(filter_id)
         if filter_model:
-            label = filter_model.label
-            category = filter_model.category or ""
-            pg = filter_model.primaryGroup or "data-type"
-            description = filter_model.description or ""
+            label = getattr(filter_model, "label", default_label or filter_id)
+            category = getattr(filter_model, "category", "") or ""
+            pg = getattr(filter_model, "primaryGroup", "") or "data-type"
+            description = getattr(filter_model, "description", "") or ""
         else:
             label = default_label or filter_id
             category = ""
@@ -308,10 +341,12 @@ class FilterRecommender:
             end = min(len(val), m.end() + after)
             while end < len(val) and val[end] not in ' \t\n.,;':
                 end += 1
-            raw_slice = val[start:end].strip()
             prefix = "..." if start > 0 else ""
             suffix = "..." if end < len(val) else ""
-            return f"{prefix}{raw_slice}{suffix}"
+            before_match = val[start:m.start()]
+            matched = val[m.start():m.end()]
+            after_match = val[m.end():end]
+            return f"{prefix}{before_match}**{matched}**{after_match}{suffix}".strip()
 
         all_instances = []
         for field_name, field_val in fields_to_check:
@@ -344,11 +379,13 @@ class FilterRecommender:
             primary_snippet = all_instances[0]["snippet"]
             primary_expanded = all_instances[0]["expandedSnippet"]
 
+        actual_matched = all_instances[0]["matchedText"] if (all_instances and all_instances[0].get("matchedText")) else matched_term
         ev = {
             "sourceField": source_field,
             "snippet": primary_snippet,
             "expandedSnippet": primary_expanded,
-            "matchedTerm": matched_term,
+            "matchedTerm": actual_matched,
+            "ruleName": matched_term,
             "instancesInMetadata": total_occurrences,
             "ruleRationale": rule_rationale,
             "allInstances": all_instances[:10]
@@ -449,38 +486,6 @@ class FilterRecommender:
         # Check if model organism context exists in the metadata
         has_model_organism_context = bool(self._compiled_model_organism.search(text))
 
-        def trigger_hierarchical_parents(child_id: str, child_label: str):
-            """Hierarchically triggers parent filter(s) silently when a child filter is matched."""
-            curr_id = child_id
-            curr_label = child_label
-            while True:
-                parent_id = self.hierarchy.get(curr_id)
-                if not parent_id or parent_id == curr_id:
-                    break
-                if parent_id in rejected_set:
-                    break
-                if parent_id not in recommended_filters:
-                    parent_model = self.filter_by_id.get(parent_id)
-                    parent_label = parent_model.label if parent_model else parent_id
-                    ev = {
-                        "sourceField": "hierarchical_parent",
-                        "snippet": f"Triggered automatically by child filter '{curr_label}'",
-                        "matchedTerm": parent_label,
-                        "instancesInMetadata": 1,
-                        "ruleRationale": f"Hierarchical parent category of '{curr_label}' ({curr_id})",
-                        "derivedFrom": [curr_id]
-                    }
-                    # Mark as is_derived=True so it is handled silently
-                    recommended_filters[parent_id] = self._to_filter_dict(
-                        parent_id,
-                        default_label=parent_label,
-                        evidence=ev,
-                        is_derived=True
-                    )
-                curr_id = parent_id
-                curr_model = self.filter_by_id.get(curr_id)
-                curr_label = curr_model.label if curr_model else curr_id
-
         def apply_rule(rule: Dict[str, Any], is_topography: bool = False, is_histology: bool = False):
             pattern_regex = rule.get("_compiled_pattern")
             if not pattern_regex:
@@ -530,9 +535,10 @@ class FilterRecommender:
                             case_sensitive=case_sensitive
                         )
                         # Direct match -> is_derived=False (shown as card)
+                        canonical_label = self.filter_by_id[fid].label if (fid in self.filter_by_id and self.filter_by_id[fid].label) else matched_term
                         recommended_filters[fid] = self._to_filter_dict(
                             fid,
-                            default_label=matched_term,
+                            default_label=canonical_label,
                             evidence=evidence,
                             is_derived=False
                         )
@@ -540,9 +546,6 @@ class FilterRecommender:
                             detected_topography_ids.add(fid)
                         if is_histology or rule.get("is_histology"):
                             detected_histology_ids.add(fid)
-
-                        # Trigger parent filter in hierarchy silently
-                        trigger_hierarchical_parents(fid, matched_term)
 
         # 1. TOPOGRAPHY SCANNING (Direct matches)
         # Check if any cancer topography is mentioned in the dataset/paper title
@@ -570,71 +573,19 @@ class FilterRecommender:
         for rule in self.rules.get("histology_rules", []):
             apply_rule(rule, is_histology=True)
 
-        # 3. DATA TYPE HIERARCHY SCANNING (Direct matches)
+        # 3. DATA TYPE HIERARCHY SCANNING (Direct leaf/specific matches)
         for rule in self.rules.get("data_type_rules", []):
             apply_rule(rule)
 
-        # 4. PARENT CATEGORY RULES & AUTO-TRIGGERS (Fallback direct triggers)
-        for rule in self.rules.get("parent_category_rules", []):
-            parent_id = rule.get("filter_id")
-            if not parent_id or parent_id in recommended_filters or parent_id in rejected_set:
-                continue
-
-            # Special case for Biobank Parent: strictly require physical biobank pattern
-            if parent_id == "0_2_0":
-                if has_biobank_context:
-                    matched_term = rule.get("matched_term", "Biobank Samples")
-                    rationale = rule.get("rationale", "Detected physical biobank repository or specimen availability")
-                    raw_pattern = rule.get("fallback_pattern", "")
-                    evidence = self._build_evidence(metadata, raw_pattern, matched_term, rationale)
-                    # If directly matched by biobank keyword, show as card
-                    recommended_filters[parent_id] = self._to_filter_dict(
-                        parent_id,
-                        default_label=matched_term,
-                        evidence=evidence,
-                        is_derived=False
-                    )
-                continue
-
-            triggered = False
-            # Trigger 1: Specific imaging file formats in otherDataTypes
-            if rule.get("check_imaging_formats"):
-                has_imaging_files = any(
-                    str(item.get('format', '')).upper() in ['DICOM', 'TIFF', 'SVS', 'NIFTI'] or
-                    'image' in str(item.get('title', '')).lower() or
-                    'scan' in str(item.get('title', '')).lower() or
-                    'mammogram' in str(item.get('title', '')).lower()
-                    for item in other_data_types if isinstance(item, dict)
-                )
-                if has_imaging_files:
-                    triggered = True
-
-            # Trigger 2: Fallback regular expression pattern
-            fallback_regex = rule.get("_compiled_fallback")
-            if not triggered and fallback_regex and fallback_regex.search(text):
-                triggered = True
-
-            if triggered:
-                matched_term = rule.get("matched_term", "")
-                rationale = rule.get("rationale", "")
-                raw_pattern = rule.get("fallback_pattern") or rule.get("pattern", "")
-                evidence = self._build_evidence(metadata, raw_pattern, matched_term, rationale)
-                recommended_filters[parent_id] = self._to_filter_dict(
-                    parent_id,
-                    default_label=matched_term,
-                    evidence=evidence,
-                    is_derived=False
-                )
-
-        # 5. ACCESS TYPE GOVERNANCE RULES (Direct matches)
+        # 4. ACCESS TYPE GOVERNANCE RULES (Direct matches)
         for rule in self.rules.get("access_rules", []):
             apply_rule(rule)
 
         # 6. AUTO-HYDRATE CRUK & TCGA TERMS FROM CO-OCCURRENCE (Created silently, is_derived=True)
-        if detected_topography_ids and detected_histology_ids and self.db and models and hasattr(models, "CancerTermIdMapping"):
+        if detected_topography_ids and self.db and models and hasattr(models, "CancerTermIdMapping"):
             try:
                 valid_topos = [tid for tid in detected_topography_ids if tid not in rejected_set]
-                valid_histos = [hid for hid in detected_histology_ids if hid not in rejected_set]
+                valid_histos = [hid for hid in detected_histology_ids if hid not in rejected_set] if detected_histology_ids else ["0_0_1_0"]
 
                 if valid_topos and valid_histos:
                     mappings = self.db.query(models.CancerTermIdMapping).filter(
@@ -648,13 +599,14 @@ class FilterRecommender:
                                 if fid in rejected_set:
                                     continue
                                 if fid not in recommended_filters:
+                                    is_default_histo = (m.histology_id == "0_0_1_0")
                                     evidence = {
                                         "sourceField": "cruk_tcga_crossref",
-                                        "snippet": f"Derived from Topography ({m.topography_id}) & Histology ({m.histology_id}) co-occurrence",
+                                        "snippet": f"Derived from Topography ({m.topography_id})" if is_default_histo else f"Derived from Topography ({m.topography_id}) & Histology ({m.histology_id}) co-occurrence",
                                         "matchedTerm": fid,
                                         "instancesInMetadata": 1,
-                                        "ruleRationale": "Hydrated from matched Topography and Histology pairing",
-                                        "derivedFrom": [m.topography_id, m.histology_id]
+                                        "ruleRationale": "Hydrated from matched Topography" if is_default_histo else "Hydrated from matched Topography and Histology pairing",
+                                        "derivedFrom": [m.topography_id] if is_default_histo else [m.topography_id, m.histology_id]
                                     }
                                     # Mark as is_derived=True so it is created silently upon acceptance
                                     recommended_filters[fid] = self._to_filter_dict(
