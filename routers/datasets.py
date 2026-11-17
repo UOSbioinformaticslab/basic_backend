@@ -124,12 +124,16 @@ def get_simple_dataset_list(
 
 @router.get("/{dataset_id}", response_model=schemas.DatasetResponse)
 def get_public_dataset(
-        dataset_id: int,
+        dataset_id: str,
         preview: bool = False,
         db: Session = Depends(database.get_db)
 ):
-    # Look up the dataset by its primary key ID
-    db_dataset = db.query(models.Dataset).filter(models.Dataset.id == dataset_id).first()
+    # Look up the dataset by primary key ID or datasetid string
+    db_dataset = None
+    if str(dataset_id).isdigit():
+        db_dataset = db.query(models.Dataset).filter(models.Dataset.id == int(dataset_id)).first()
+    if not db_dataset:
+        db_dataset = db.query(models.Dataset).filter(models.Dataset.datasetid == str(dataset_id)).first()
 
     if not db_dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
@@ -187,12 +191,16 @@ def save_metadata_progress(
 
 @router.put("/{dataset_id}", response_model=schemas.DatasetResponse)
 def update_metadata_progress(
-        dataset_id: int,
+        dataset_id: str,
         dataset_in: schemas.DatasetBase,
         db: Session = Depends(database.get_db),
         current_user: models.User = Depends(get_current_user)
 ):
-    db_dataset = db.query(models.Dataset).filter(models.Dataset.id == dataset_id).first()
+    db_dataset = None
+    if str(dataset_id).isdigit():
+        db_dataset = db.query(models.Dataset).filter(models.Dataset.id == int(dataset_id)).first()
+    if not db_dataset:
+        db_dataset = db.query(models.Dataset).filter(models.Dataset.datasetid == str(dataset_id)).first()
 
     if not db_dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
@@ -270,11 +278,15 @@ async def link_to_project(
 
 @router.delete("/{dataset_id}")
 def delete_dataset(
-        dataset_id: int,
+        dataset_id: str,
         db: Session = Depends(database.get_db),
         current_user: models.User = Depends(get_current_user)
 ):
-    db_dataset = db.query(models.Dataset).filter(models.Dataset.id == dataset_id).first()
+    db_dataset = None
+    if str(dataset_id).isdigit():
+        db_dataset = db.query(models.Dataset).filter(models.Dataset.id == int(dataset_id)).first()
+    if not db_dataset:
+        db_dataset = db.query(models.Dataset).filter(models.Dataset.datasetid == str(dataset_id)).first()
 
     if not db_dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
