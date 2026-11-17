@@ -152,7 +152,8 @@ def get_environment_teams(
 
     with get_db_for_env(env) as db:
         teams = db.query(models.Team.id, models.Team.name).order_by(models.Team.name.asc()).all()
-        return [{"id": t.id, "name": t.name} for t in teams]
+        team_list = [{"id": t.id, "name": t.name} for t in teams]
+        return {"teams": team_list, "total": len(team_list)}
 
 
 @router.get("")
@@ -538,6 +539,17 @@ def copy_dataset(
                 updated_at=datetime.now(timezone.utc)
             )
             tgt_db.add(target_ds)
+            tgt_db.flush()
+
+            # Ensure metadata_blob reflects the target database internal ID
+            if isinstance(target_ds.metadata_blob, dict):
+                blob_copy = dict(target_ds.metadata_blob)
+                blob_copy["id"] = target_ds.id
+                target_ds.metadata_blob = blob_copy
+            if isinstance(target_ds.draft_metadata_blob, dict):
+                draft_copy = dict(target_ds.draft_metadata_blob)
+                draft_copy["id"] = target_ds.id
+                target_ds.draft_metadata_blob = draft_copy
             tgt_db.flush()
 
         # 6. Copy Linked Projects
