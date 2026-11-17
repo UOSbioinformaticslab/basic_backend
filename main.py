@@ -113,6 +113,13 @@ app.include_router(publications.router)
 app.include_router(teams_router.router)
 app.include_router(tools.router)
 
+# Conditionally include local-only synchronization router (in .railwayignore)
+try:
+    from routers import local_sync
+    app.include_router(local_sync.router)
+except ImportError:
+    pass
+
 @app.get("/")
 def health_check():
     return {"status": "active", "system": "CRUK Datahub Backend"}

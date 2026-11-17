@@ -9,3 +9,4 @@ cruk_datahub.db
 *.db*
 .env
 .env.*
+routers/local_sync.py
