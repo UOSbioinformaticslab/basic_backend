@@ -94,6 +94,7 @@ class Dataset(Base):
     user = relationship("User", back_populates="datasets")
     team = relationship("Team", back_populates="datasets")
     project_datasets = relationship("ProjectDataset", back_populates="dataset")
+    projects = relationship("Project", secondary="project_datasets", primaryjoin="Dataset.id==ProjectDataset.dataset_id", secondaryjoin="Project.id==ProjectDataset.project_id", viewonly=True)
     publications = relationship("Publication", secondary="publication_has_dataset", back_populates="datasets")
     tools = relationship("Tool", secondary="tool_has_dataset", back_populates="datasets")
 

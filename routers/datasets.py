@@ -1,7 +1,7 @@
 # routers/datasets.py
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import String, func
 import uuid
 from datetime import datetime
@@ -16,6 +16,49 @@ def build_dataset_response(db_dataset: models.Dataset, use_draft: bool = False) 
     blob = db_dataset.draft_metadata_blob if (use_draft and db_dataset.draft_metadata_blob is not None) else db_dataset.metadata_blob
     if blob is None and db_dataset.draft_metadata_blob is not None:
         blob = db_dataset.draft_metadata_blob
+
+    # Build linked projects list
+    projects_list = []
+    if getattr(db_dataset, 'projects', None):
+        for p in db_dataset.projects:
+            p_name = p.project_grant_name
+            if not p_name and isinstance(p.metadata_blob, dict):
+                p_name = p.metadata_blob.get("summary", {}).get("title") or p.metadata_blob.get("project_grant_name")
+            projects_list.append({
+                "id": p.id,
+                "pid": p.pid,
+                "project_grant_name": p_name or f"Project {p.id}",
+                "status": p.status
+            })
+
+    # Build linked publications list
+    publications_list = []
+    if getattr(db_dataset, 'publications', None):
+        for pub in db_dataset.publications:
+            publications_list.append({
+                "id": pub.id,
+                "paper_title": pub.paper_title or "Untitled Publication",
+                "year_of_publication": pub.year_of_publication,
+                "paper_doi": pub.paper_doi,
+                "journal_name": pub.journal_name,
+                "url": pub.url,
+                "authors": pub.authors or []
+            })
+
+    # Build linked tools list
+    tools_list = []
+    if getattr(db_dataset, 'tools', None):
+        for t in db_dataset.tools:
+            tools_list.append({
+                "id": t.id,
+                "name": t.name or f"Tool {t.id}",
+                "url": t.url,
+                "description": t.description,
+                "status": t.status,
+                "enabled": t.enabled,
+                "team_id": t.team_id
+            })
+
     return {
         "id": db_dataset.id,
         "datasetid": db_dataset.datasetid,
@@ -26,7 +69,10 @@ def build_dataset_response(db_dataset: models.Dataset, use_draft: bool = False) 
         "status": db_dataset.status,
         "active": bool(db_dataset.active),
         "has_draft": db_dataset.draft_metadata_blob is not None,
-        "created_at": db_dataset.created_at
+        "created_at": db_dataset.created_at,
+        "projects": projects_list,
+        "publications": publications_list,
+        "tools": tools_list
     }
 
 
@@ -122,18 +168,72 @@ def get_simple_dataset_list(
     return results
 
 
+@router.get("/team/{team_id}/linkable")
+def get_team_linkable_datasets(
+    team_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if not current_user.is_admin and team_id not in [t.id for t in current_user.teams]:
+        raise HTTPException(status_code=403, detail="Not a member of this team")
+
+    records = db.query(models.Dataset).filter(models.Dataset.team_id == team_id).all()
+
+    # Group datasets by logical identity
+    grouped = {}
+    for r in records:
+        blob = r.draft_metadata_blob if r.draft_metadata_blob is not None else r.metadata_blob
+        title = None
+        if isinstance(blob, dict):
+            title = blob.get("summary", {}).get("title")
+        if not title:
+            title = r.computed_title or r.datasetid or f"Dataset {r.id}"
+
+        key = r.datasetid if r.datasetid else title.strip().lower()
+        if key not in grouped:
+            grouped[key] = []
+        grouped[key].append((r, title))
+
+    linkable = []
+    for key, items in grouped.items():
+        active_items = [item for item in items if item[0].active]
+        if active_items:
+            chosen = max(active_items, key=lambda x: (x[0].updated_at or x[0].created_at or datetime.min, x[0].id))
+        else:
+            chosen = max(items, key=lambda x: (x[0].updated_at or x[0].created_at or datetime.min, x[0].id))
+
+        rec, title = chosen
+        linkable.append({
+            "id": rec.id,
+            "datasetid": rec.datasetid,
+            "title": title,
+            "active": bool(rec.active),
+            "status": rec.status
+        })
+
+    linkable.sort(key=lambda x: (x["title"] or "").lower())
+    return linkable
+
+
 @router.get("/{dataset_id}", response_model=schemas.DatasetResponse)
 def get_public_dataset(
         dataset_id: str,
         preview: bool = False,
         db: Session = Depends(database.get_db)
 ):
-    # Look up the dataset by primary key ID or datasetid string
+    # Look up the dataset by primary key ID or datasetid string with eager loading
+    query = db.query(models.Dataset).options(
+        selectinload(models.Dataset.projects),
+        selectinload(models.Dataset.publications),
+        selectinload(models.Dataset.tools),
+        selectinload(models.Dataset.team)
+    )
+
     db_dataset = None
     if str(dataset_id).isdigit():
-        db_dataset = db.query(models.Dataset).filter(models.Dataset.id == int(dataset_id)).first()
+        db_dataset = query.filter(models.Dataset.id == int(dataset_id)).first()
     if not db_dataset:
-        db_dataset = db.query(models.Dataset).filter(models.Dataset.datasetid == str(dataset_id)).first()
+        db_dataset = query.filter(models.Dataset.datasetid == str(dataset_id)).first()
 
     if not db_dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
@@ -180,6 +280,21 @@ def save_metadata_progress(
         db.add(db_dataset)
         db.commit()
         db.refresh(db_dataset)
+
+        # Synchronize linked projects if provided
+        if dataset_in.project_ids is not None:
+            for pid in dataset_in.project_ids:
+                db.add(models.ProjectDataset(project_id=pid, dataset_id=db_dataset.id))
+            db.commit()
+
+        # Reload with relationships
+        db_dataset = db.query(models.Dataset).options(
+            selectinload(models.Dataset.projects),
+            selectinload(models.Dataset.publications),
+            selectinload(models.Dataset.tools),
+            selectinload(models.Dataset.team)
+        ).filter(models.Dataset.id == db_dataset.id).first()
+
         return build_dataset_response(db_dataset, use_draft=not is_active)
     except Exception as e:
         db.rollback()
@@ -235,8 +350,22 @@ def update_metadata_progress(
             db_dataset.status = models.Dataset.STATUS_DRAFT
 
     try:
+        # Synchronize linked projects if provided
+        if dataset_in.project_ids is not None:
+            db.query(models.ProjectDataset).filter(models.ProjectDataset.dataset_id == db_dataset.id).delete()
+            for pid in dataset_in.project_ids:
+                db.add(models.ProjectDataset(project_id=pid, dataset_id=db_dataset.id))
+
         db.commit()
-        db.refresh(db_dataset)
+
+        # Reload with relationships
+        db_dataset = db.query(models.Dataset).options(
+            selectinload(models.Dataset.projects),
+            selectinload(models.Dataset.publications),
+            selectinload(models.Dataset.tools),
+            selectinload(models.Dataset.team)
+        ).filter(models.Dataset.id == db_dataset.id).first()
+
         return build_dataset_response(db_dataset, use_draft=not db_dataset.active)
     except Exception as e:
         db.rollback()
