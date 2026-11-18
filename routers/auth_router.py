@@ -128,3 +128,28 @@ def change_own_password(
     current_user.hashed_password = auth.get_password_hash(payload.new_password)
     db.commit()
     return {"message": "Password successfully changed"}
+
+
+@router.get("/users/me")
+def read_users_me(
+    current_user: models.User = Depends(dependencies.get_current_user),
+    db: Session = Depends(database.get_db),
+):
+    """Returns the currently authenticated user's profile, admin status, and teams."""
+    user_team_links = db.query(models.user_teams).filter_by(user_id=current_user.id).all()
+    team_admin_map = {link.team_id: link.is_team_admin for link in user_team_links}
+    return {
+        "id": current_user.id,
+        "name": current_user.name,
+        "email": current_user.email,
+        "applicant_organisation": current_user.applicant_organisation,
+        "is_admin": bool(getattr(current_user, "is_admin", False)),
+        "teams": [
+            {
+                "id": t.id,
+                "name": t.name,
+                "is_team_admin": bool(team_admin_map.get(t.id, False)),
+            }
+            for t in current_user.teams
+        ],
+    }

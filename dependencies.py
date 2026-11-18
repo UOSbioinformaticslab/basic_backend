@@ -29,7 +29,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
 
     except JWTError as e:
         print(f"❌ DECODE FAIL: {str(e)}")  # This will tell us if it's a signature or expiry issue
-        print(f"Using Secret Key: {SECRET_KEY}")
         raise HTTPException(status_code=401, detail=f"JWT Error: {str(e)}")
 
     user = db.query(models.User).filter(models.User.email == username).first()
@@ -40,3 +39,40 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     print(f"🔓 ACCESS GRANTED: {user.name}")
     print("!" * 40 + "\n")
     return user
+
+
+async def get_current_admin_user(current_user: models.User = Depends(get_current_user)):
+    """Requires the authenticated user to be a global admin."""
+    if not bool(getattr(current_user, "is_admin", False)):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required",
+        )
+    return current_user
+
+
+def verify_team_member(team_id: int, current_user: models.User):
+    """Ensures the user is a member of the specified team or a global admin."""
+    if bool(getattr(current_user, "is_admin", False)):
+        return
+    if not any(t.id == team_id for t in current_user.teams):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Team membership required",
+        )
+
+
+def verify_team_admin(team_id: int, current_user: models.User, db: Session):
+    """Ensures the user is a team admin for the specified team or a global admin."""
+    if bool(getattr(current_user, "is_admin", False)):
+        return
+    link = (
+        db.query(models.user_teams)
+        .filter_by(user_id=current_user.id, team_id=team_id)
+        .first()
+    )
+    if not link or not bool(link.is_team_admin):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Team admin privileges required",
+        )

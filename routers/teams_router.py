@@ -215,7 +215,12 @@ def reject_invitation(
     return {"status": "success", "message": "Invitation rejected"}
 
 @router.get("/{team_id}/members")
-def get_team_members(team_id: int, db: Session = Depends(database.get_db)):
+def get_team_members(
+    team_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(dependencies.get_current_user),
+):
+    dependencies.verify_team_member(team_id, current_user)
     team = db.query(models.Team).filter(models.Team.id == team_id).first()
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
@@ -238,7 +243,14 @@ class AdminUpdate(BaseModel):
     is_admin: bool
 
 @router.put("/{team_id}/members/{user_id}/admin")
-def toggle_team_admin(team_id: int, user_id: int, payload: AdminUpdate, db: Session = Depends(database.get_db)):
+def toggle_team_admin(
+    team_id: int,
+    user_id: int,
+    payload: AdminUpdate,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(dependencies.get_current_user),
+):
+    dependencies.verify_team_admin(team_id, current_user, db)
     stmt = (
         models.user_teams.update()
         .where(
@@ -254,7 +266,13 @@ def toggle_team_admin(team_id: int, user_id: int, payload: AdminUpdate, db: Sess
     return {"message": "Admin status updated"}
 
 @router.delete("/{team_id}/members/{user_id}")
-def remove_team_member(team_id: int, user_id: int, db: Session = Depends(database.get_db)):
+def remove_team_member(
+    team_id: int,
+    user_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(dependencies.get_current_user),
+):
+    dependencies.verify_team_admin(team_id, current_user, db)
     user = db.query(models.User).filter(models.User.id == user_id).first()
     team = db.query(models.Team).filter(models.Team.id == team_id).first()
     if not user or not team:
@@ -269,7 +287,13 @@ class NotificationEmailUpdate(BaseModel):
     notification_email: str
 
 @router.put("/{team_id}/notification_email")
-def update_notification_email(team_id: int, payload: NotificationEmailUpdate, db: Session = Depends(database.get_db)):
+def update_notification_email(
+    team_id: int,
+    payload: NotificationEmailUpdate,
+    db: Session = Depends(database.get_db),
+    current_user: models.User = Depends(dependencies.get_current_user),
+):
+    dependencies.verify_team_admin(team_id, current_user, db)
     team = db.query(models.Team).filter(models.Team.id == team_id).first()
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
