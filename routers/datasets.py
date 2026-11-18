@@ -8,7 +8,7 @@ from datetime import datetime
 
 # Standard Absolute Imports
 
-from dependencies import get_current_user
+from dependencies import get_current_user, get_current_admin_user
 import database, schemas, models, crud
 router = APIRouter(prefix="/datasets", tags=["datasets"])
 
@@ -324,7 +324,8 @@ def get_extra_term_by_id(
 @router.post("/extra-terms/record", response_model=schemas.CancerTermMappingResponse)
 def post_new_extra_term(
         payload: schemas.CancerTermMappingCreate,
-        db: Session = Depends(database.get_db)
+        db: Session = Depends(database.get_db),
+        current_admin: models.User = Depends(get_current_admin_user),
 ):
     """
     Insert a new cancer term mapping record into the standalone database table.

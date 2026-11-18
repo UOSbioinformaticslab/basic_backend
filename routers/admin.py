@@ -7,8 +7,13 @@ import models
 import schemas
 import database
 import auth  # Used for password hashing
+import dependencies
 
-router = APIRouter(prefix="/admin", tags=["admin"])
+router = APIRouter(
+    prefix="/admin",
+    tags=["admin"],
+    dependencies=[Depends(dependencies.get_current_admin_user)],
+)
 
 
 # --- TEAM MANAGEMENT ---
