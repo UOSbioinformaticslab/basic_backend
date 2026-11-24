@@ -28,6 +28,12 @@ def build_dataset_response(db_dataset: models.Dataset, use_draft: bool = False) 
                 "id": p.id,
                 "pid": p.pid,
                 "project_grant_name": p_name or f"Project {p.id}",
+                "lead_researcher": p.lead_researcher,
+                "lead_research_institute": p.lead_research_institute,
+                "grant_numbers": p.grant_numbers,
+                "project_grant_start_date": p.project_grant_start_date,
+                "project_grant_end_date": p.project_grant_end_date,
+                "project_grant_scope": p.project_grant_scope,
                 "status": p.status
             })
 
@@ -403,6 +409,30 @@ async def link_to_project(
     # 4. Create the link using the new crud function
     link_data = schemas.ProjectDatasetCreate(project_id=project_id, dataset_id=dataset_id)
     return crud.create_project_dataset_link(db, link_data)
+
+
+@router.delete("/{dataset_id}/links/{project_id}")
+async def unlink_from_project(
+        dataset_id: int,
+        project_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    link = db.query(models.ProjectDataset).filter(
+        models.ProjectDataset.dataset_id == dataset_id,
+        models.ProjectDataset.project_id == project_id
+    ).first()
+
+    if not link:
+        raise HTTPException(status_code=404, detail="Link between dataset and project not found")
+
+    try:
+        db.delete(link)
+        db.commit()
+        return {"message": "Link successfully deleted"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete link: {str(e)}")
 
 
 @router.delete("/{dataset_id}")

@@ -71,7 +71,11 @@ def update_project(
                 db.add(models.ProjectDataset(project_id=db_project.id, dataset_id=did))
 
         db.commit()
-        db.refresh(db_project)
+        db_project = db.query(models.Project).options(
+            selectinload(models.Project.datasets),
+            selectinload(models.Project.publications),
+            selectinload(models.Project.tools)
+        ).filter(models.Project.id == db_project.id).first()
         return db_project
     except Exception as e:
         db.rollback()
@@ -165,3 +169,57 @@ def get_project(project_pid: str, db: Session = Depends(database.get_db)):
         raise HTTPException(status_code=404, detail="Project not found")
 
     return db_project
+
+
+@router.post("/{project_id}/links/{dataset_id}", response_model=schemas.ProjectDatasetResponse)
+async def link_project_to_dataset(
+        project_id: int,
+        dataset_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    # 1. Check if the project exists
+    db_project = db.query(models.Project).filter(models.Project.id == project_id).first()
+    if not db_project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    # 2. Check if the dataset exists
+    db_dataset = db.query(models.Dataset).filter(models.Dataset.id == dataset_id).first()
+    if not db_dataset:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+
+    # 3. Check for an existing link
+    existing = db.query(models.ProjectDataset).filter(
+        models.ProjectDataset.project_id == project_id,
+        models.ProjectDataset.dataset_id == dataset_id
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Relationship already exists")
+
+    # 4. Create the link
+    link_data = schemas.ProjectDatasetCreate(project_id=project_id, dataset_id=dataset_id)
+    return crud.create_project_dataset_link(db, link_data)
+
+
+@router.delete("/{project_id}/links/{dataset_id}")
+async def unlink_project_from_dataset(
+        project_id: int,
+        dataset_id: int,
+        db: Session = Depends(database.get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    link = db.query(models.ProjectDataset).filter(
+        models.ProjectDataset.project_id == project_id,
+        models.ProjectDataset.dataset_id == dataset_id
+    ).first()
+
+    if not link:
+        raise HTTPException(status_code=404, detail="Link between project and dataset not found")
+
+    try:
+        db.delete(link)
+        db.commit()
+        return {"message": "Link successfully deleted"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete link: {str(e)}")

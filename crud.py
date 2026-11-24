@@ -44,9 +44,12 @@ def create_project(db: Session, project: schemas.ProjectCreate, user_id: int, te
         for did in dataset_ids:
             db.add(models.ProjectDataset(project_id=db_project.id, dataset_id=did))
         db.commit()
-        db.refresh(db_project)
 
-    return db_project
+    return db.query(models.Project).options(
+        selectinload(models.Project.datasets),
+        selectinload(models.Project.publications),
+        selectinload(models.Project.tools)
+    ).filter(models.Project.id == db_project.id).first()
 
 def create_project_dataset_link(db: Session, link: schemas.ProjectDatasetCreate):
     # Create the link in the association table
