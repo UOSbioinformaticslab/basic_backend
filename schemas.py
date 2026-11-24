@@ -42,6 +42,7 @@ class DatasetBase(BaseModel):
     team_id: Optional[int] = None
     status: Optional[str] = "DRAFT"
     unpublish: Optional[bool] = False
+    project_ids: Optional[List[int]] = None
 
 
 class DatasetCreate(DatasetBase):
@@ -68,6 +69,33 @@ class ToolSimpleResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class PublicationSimpleResponse(BaseModel):
+    id: int
+    paper_title: str
+    year_of_publication: Optional[str] = None
+    paper_doi: Optional[str] = None
+    journal_name: Optional[str] = None
+    url: Optional[str] = None
+    authors: Optional[List[Any]] = []
+
+    class Config:
+        from_attributes = True
+
+class ProjectSimpleResponse(BaseModel):
+    id: int
+    pid: Optional[str] = None
+    project_grant_name: Optional[str] = None
+    lead_researcher: Optional[str] = None
+    lead_research_institute: Optional[str] = None
+    grant_numbers: Optional[str] = None
+    project_grant_start_date: Optional[str] = None
+    project_grant_end_date: Optional[str] = None
+    project_grant_scope: Optional[str] = None
+    status: Optional[str] = "DRAFT"
+
+    class Config:
+        from_attributes = True
+
 class DatasetResponse(DatasetBase):
     id: int
     datasetid: str
@@ -75,6 +103,8 @@ class DatasetResponse(DatasetBase):
     has_draft: bool = False
     created_at: datetime
     team_name: Optional[str] = None
+    projects: List[ProjectSimpleResponse] = []
+    publications: List[PublicationSimpleResponse] = []
     tools: List[ToolSimpleResponse] = []
 
     class Config:
@@ -182,23 +212,11 @@ class ProjectBase(BaseModel):
     # Still keeping the blob for extra React-specific form data
     metadata_blob: dict
     team_id: Optional[int] = None
+    dataset_ids: Optional[List[int]] = None
 
 
 class ProjectCreate(ProjectBase):
     status: str = "DRAFT"
-
-
-class PublicationSimpleResponse(BaseModel):
-    id: int
-    paper_title: str
-    year_of_publication: Optional[str] = None
-    paper_doi: Optional[str] = None
-    journal_name: Optional[str] = None
-    url: Optional[str] = None
-    authors: Optional[List[Any]] = []
-
-    class Config:
-        from_attributes = True
 
 
 class ProjectResponse(ProjectBase):
