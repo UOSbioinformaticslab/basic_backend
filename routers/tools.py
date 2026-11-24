@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 from sqlalchemy.orm import Session, selectinload
-from dependencies import get_current_user
+from dependencies import get_current_user, check_sandbox_team, enforce_non_sandbox
 import database, schemas, models, crud
 
 router = APIRouter(prefix="/tools", tags=["tools"])
@@ -10,14 +10,16 @@ router = APIRouter(prefix="/tools", tags=["tools"])
 def check_is_team_admin(db: Session, user_id: int, team_id: int) -> bool:
     if not user_id or not team_id:
         return False
+    if check_sandbox_team(db, team_id):
+        return False
     user = db.query(models.User).filter(models.User.id == user_id).first()
-    if user and team_id in [t.id for t in user.teams]:
+    if user and user.is_admin:
         return True
     link = db.query(models.user_teams).filter(
         models.user_teams.c.user_id == user_id,
         models.user_teams.c.team_id == team_id
     ).first()
-    return link is not None
+    return bool(link and link.is_team_admin)
 
 
 @router.post("/", response_model=schemas.ToolResponse)
@@ -31,6 +33,8 @@ def create_tool(
             status_code=400,
             detail="No active team selected. Please select a team before saving."
         )
+
+    enforce_non_sandbox(db, tool_in.team_id, "Creating tools")
 
     if not check_is_team_admin(db, current_user.id, tool_in.team_id):
         raise HTTPException(
@@ -68,6 +72,8 @@ def delete_tool(
     if not db_tool:
         raise HTTPException(status_code=404, detail="Tool not found")
 
+    enforce_non_sandbox(db, db_tool.team_id, "Deleting tools")
+
     if not check_is_team_admin(db, current_user.id, db_tool.team_id):
         raise HTTPException(
             status_code=403,
@@ -93,6 +99,8 @@ def update_tool(
     if not db_tool:
         raise HTTPException(status_code=404, detail="Tool not found")
 
+    enforce_non_sandbox(db, db_tool.team_id, "Updating tools")
+
     if not check_is_team_admin(db, current_user.id, db_tool.team_id):
         raise HTTPException(
             status_code=403,
@@ -112,6 +120,8 @@ def link_tool(
     db_tool = db.query(models.Tool).filter(models.Tool.id == tool_id).first()
     if not db_tool:
         raise HTTPException(status_code=404, detail="Tool not found")
+
+    enforce_non_sandbox(db, db_tool.team_id, "Linking tools")
 
     if not check_is_team_admin(db, current_user.id, db_tool.team_id):
         raise HTTPException(

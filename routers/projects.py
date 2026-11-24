@@ -25,6 +25,8 @@ def save_project(
     if project_in.team_id not in user_team_ids:
         raise HTTPException(status_code=403, detail="User is not a member of the specified team")
 
+    dependencies.enforce_non_sandbox(db, project_in.team_id, "Creating projects")
+
     # 2. Call the CRUD function to map the 11 fields (pid, project_grant_name, etc.)
     # and the authenticated user_id to the database.
     return crud.create_project(
@@ -48,11 +50,14 @@ def update_project(
     if not db_project:
         raise HTTPException(status_code=404, detail="Project not found")
 
+    dependencies.enforce_non_sandbox(db, db_project.team_id, "Updating projects")
+
     # 2. Update the fields dynamically
     if project_in.team_id:
         user_team_ids = [team.id for team in current_user.teams]
         if project_in.team_id not in user_team_ids:
             raise HTTPException(status_code=403, detail="User is not a member of the specified team")
+        dependencies.enforce_non_sandbox(db, project_in.team_id, "Updating projects")
 
     # exclude_unset=True ensures we only update fields that were actually sent in the payload
     update_data = project_in.dict(exclude_unset=True) if hasattr(project_in, 'dict') else project_in.model_dump(exclude_unset=True)
@@ -137,6 +142,8 @@ def delete_project(
     if not db_project:
         raise HTTPException(status_code=404, detail="Project not found")
 
+    dependencies.enforce_non_sandbox(db, db_project.team_id, "Deleting projects")
+
     try:
         db.delete(db_project)
         db.commit()
@@ -188,6 +195,9 @@ async def link_project_to_dataset(
     if not db_dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
 
+    dependencies.enforce_non_sandbox(db, db_project.team_id, "Linking projects")
+    dependencies.enforce_non_sandbox(db, db_dataset.team_id, "Linking datasets")
+
     # 3. Check for an existing link
     existing = db.query(models.ProjectDataset).filter(
         models.ProjectDataset.project_id == project_id,
@@ -215,6 +225,13 @@ async def unlink_project_from_dataset(
 
     if not link:
         raise HTTPException(status_code=404, detail="Link between project and dataset not found")
+
+    db_project = crud.get_project(db, project_id=project_id)
+    db_dataset = crud.get_dataset(db, dataset_id=dataset_id)
+    if db_project:
+        dependencies.enforce_non_sandbox(db, db_project.team_id, "Unlinking projects")
+    if db_dataset:
+        dependencies.enforce_non_sandbox(db, db_dataset.team_id, "Unlinking datasets")
 
     try:
         db.delete(link)

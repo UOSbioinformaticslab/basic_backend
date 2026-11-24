@@ -6,7 +6,7 @@ import schemas
 import crud
 import models
 from database import get_db
-from dependencies import get_current_user
+from dependencies import get_current_user, check_sandbox_team, enforce_non_sandbox
 import traceback
 
 router = APIRouter(
@@ -44,6 +44,8 @@ def delete_publication(
     if not db_publication:
         raise HTTPException(status_code=404, detail="Publication not found")
 
+    enforce_non_sandbox(db, db_publication.team_id, "Deleting publications")
+
     try:
         db.delete(db_publication)
         db.commit()
@@ -59,14 +61,16 @@ def delete_publication(
 def check_is_team_admin(db: Session, user_id: int, team_id: int) -> bool:
     if not user_id or not team_id:
         return False
+    if check_sandbox_team(db, team_id):
+        return False
     user = db.query(models.User).filter(models.User.id == user_id).first()
-    if user and team_id in [t.id for t in user.teams]:
+    if user and user.is_admin:
         return True
     link = db.query(models.user_teams).filter(
         models.user_teams.c.user_id == user_id,
         models.user_teams.c.team_id == team_id
     ).first()
-    return link is not None
+    return bool(link and link.is_team_admin)
 
 
 @router.post("/", response_model=schemas.Publication)
@@ -78,6 +82,8 @@ def create_publication(
     print("\n" + "=" * 40)
     print(f"📥 RECEIVED POST: CREATE PUBLICATION")
     print(f"User: {current_user.name} (ID: {current_user.id}) | Team ID: {pub.team_id}")
+
+    enforce_non_sandbox(db, pub.team_id, "Creating publications")
 
     if not check_is_team_admin(db, current_user.id, pub.team_id):
         raise HTTPException(
@@ -123,6 +129,7 @@ def update_publication_endpoint(
         raise HTTPException(status_code=404, detail="Publication not found")
 
     target_team_id = pub_in.team_id or db_pub.team_id
+    enforce_non_sandbox(db, target_team_id, "Updating publications")
     if not check_is_team_admin(db, current_user.id, target_team_id):
         raise HTTPException(
             status_code=403,
@@ -181,6 +188,7 @@ def link_publication_to_dataset(
         raise HTTPException(status_code=404, detail="Dataset not found")
 
     target_team_id = dataset.team_id or pub.team_id
+    enforce_non_sandbox(db, target_team_id, "Linking publications")
     if not check_is_team_admin(db, current_user.id, target_team_id):
         raise HTTPException(
             status_code=403,
@@ -229,6 +237,7 @@ def link_publication_to_project(
         raise HTTPException(status_code=404, detail="Project not found")
 
     target_team_id = project.team_id or pub.team_id
+    enforce_non_sandbox(db, target_team_id, "Linking publications")
     if not check_is_team_admin(db, current_user.id, target_team_id):
         raise HTTPException(
             status_code=403,

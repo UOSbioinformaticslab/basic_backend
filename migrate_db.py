@@ -67,6 +67,24 @@ def sync_postgres_sequences():
         except Exception as e:
             print(f"⚠️ PostgreSQL sequence sync warning: {e}")
 
+    # Ensure is_sandbox exists on postgres teams
+    if engine.dialect.name == "postgresql":
+        try:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE teams ADD COLUMN IF NOT EXISTS is_sandbox BOOLEAN DEFAULT FALSE;"))
+                # Ensure Sandbox team exists
+                res = conn.execute(text("SELECT id FROM teams WHERE name = 'Sandbox' OR is_sandbox = TRUE LIMIT 1;")).fetchone()
+                if not res:
+                    conn.execute(text("""
+                        INSERT INTO teams (name, introduction, is_sandbox) 
+                        VALUES ('Sandbox', 'Sandbox environment for test-driving data entry and validation without database persistence.', TRUE);
+                    """))
+                    print("✅ Created Sandbox team in PostgreSQL.")
+                else:
+                    conn.execute(text("UPDATE teams SET is_sandbox = TRUE WHERE id = :tid;"), {"tid": res[0]})
+        except Exception as e:
+            print(f"⚠️ PostgreSQL sandbox team migration warning: {e}")
+
 def migrate():
     sync_postgres_sequences()
 
@@ -87,6 +105,35 @@ def migrate():
 
     # Ensure skw24 has admin rights
     cursor.execute('UPDATE users SET is_admin = 1 WHERE email LIKE "%skw24%" OR email LIKE "%sussex%"')
+
+    # Migrate teams table for is_sandbox
+    cursor.execute("PRAGMA table_info(teams)")
+    team_cols = [c[1] for c in cursor.fetchall()]
+    if "is_sandbox" not in team_cols:
+        cursor.execute("ALTER TABLE teams ADD COLUMN is_sandbox BOOLEAN DEFAULT 0")
+        print("Added is_sandbox column to teams table.")
+
+    # Ensure Sandbox team exists
+    cursor.execute("SELECT id FROM teams WHERE name = 'Sandbox' OR is_sandbox = 1 LIMIT 1")
+    sandbox_row = cursor.fetchone()
+    if not sandbox_row:
+        cursor.execute("""
+            INSERT INTO teams (name, introduction, is_sandbox) 
+            VALUES ('Sandbox', 'Sandbox environment for test-driving data entry and validation without database persistence.', 1)
+        """)
+        sandbox_id = cursor.lastrowid
+        print("Created Sandbox team in SQLite.")
+    else:
+        sandbox_id = sandbox_row[0]
+        cursor.execute("UPDATE teams SET is_sandbox = 1 WHERE id = ?", (sandbox_id,))
+
+    # Enroll all existing users into Sandbox team if not already members
+    cursor.execute("SELECT id FROM users")
+    user_ids = [r[0] for r in cursor.fetchall()]
+    for uid in user_ids:
+        cursor.execute("SELECT user_id FROM user_teams WHERE user_id = ? AND team_id = ?", (uid, sandbox_id))
+        if not cursor.fetchone():
+            cursor.execute("INSERT INTO user_teams (user_id, team_id, is_team_admin) VALUES (?, ?, 0)", (uid, sandbox_id))
 
     conn.commit()
     conn.close()

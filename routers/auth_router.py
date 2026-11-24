@@ -54,6 +54,24 @@ def register_user(
         invitation.status = "ACCEPTED"
         db.commit()
 
+    # Always ensure user is automatically enrolled in the Sandbox team
+    sandbox_team = db.query(models.Team).filter(
+        (models.Team.is_sandbox == True) | (models.Team.name == "Sandbox")
+    ).first()
+    if sandbox_team:
+        link_exists = db.query(models.user_teams).filter(
+            models.user_teams.c.user_id == new_user.id,
+            models.user_teams.c.team_id == sandbox_team.id
+        ).first()
+        if not link_exists:
+            stmt = models.user_teams.insert().values(
+                user_id=new_user.id,
+                team_id=sandbox_team.id,
+                is_team_admin=False
+            )
+            db.execute(stmt)
+            db.commit()
+
     db.refresh(new_user)
     user_team_links = db.query(models.user_teams).filter_by(user_id=new_user.id).all()
     team_admin_map = {link.team_id: link.is_team_admin for link in user_team_links}
@@ -70,7 +88,15 @@ def register_user(
             "email": new_user.email,
             "applicant_organisation": new_user.applicant_organisation,
             "is_admin": bool(getattr(new_user, 'is_admin', False)),
-            "teams": [{"id": t.id, "name": t.name, "is_team_admin": team_admin_map.get(t.id, False)} for t in new_user.teams]
+            "teams": [
+                {
+                    "id": t.id,
+                    "name": t.name,
+                    "is_sandbox": bool(getattr(t, 'is_sandbox', False) or (t.name and t.name.lower() == 'sandbox')),
+                    "is_team_admin": False if (getattr(t, 'is_sandbox', False) or (t.name and t.name.lower() == 'sandbox')) else bool(team_admin_map.get(t.id, False))
+                }
+                for t in new_user.teams
+            ]
         }
     }
 
@@ -87,6 +113,25 @@ def login_for_access_token(
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # Ensure user has Sandbox team membership
+    sandbox_team = db.query(models.Team).filter(
+        (models.Team.is_sandbox == True) | (models.Team.name == "Sandbox")
+    ).first()
+    if sandbox_team:
+        link_exists = db.query(models.user_teams).filter(
+            models.user_teams.c.user_id == user.id,
+            models.user_teams.c.team_id == sandbox_team.id
+        ).first()
+        if not link_exists:
+            stmt = models.user_teams.insert().values(
+                user_id=user.id,
+                team_id=sandbox_team.id,
+                is_team_admin=False
+            )
+            db.execute(stmt)
+            db.commit()
+            db.refresh(user)
 
     # Query the association table directly to get the team roles
     user_team_links = db.query(models.user_teams).filter_by(user_id=user.id).all()
@@ -105,7 +150,15 @@ def login_for_access_token(
             "email": user.email,
             "applicant_organisation": user.applicant_organisation,
             "is_admin": bool(getattr(user, 'is_admin', False)),
-            "teams": [{"id": t.id, "name": t.name, "is_team_admin": team_admin_map.get(t.id, False)} for t in user.teams]
+            "teams": [
+                {
+                    "id": t.id,
+                    "name": t.name,
+                    "is_sandbox": bool(getattr(t, 'is_sandbox', False) or (t.name and t.name.lower() == 'sandbox')),
+                    "is_team_admin": False if (getattr(t, 'is_sandbox', False) or (t.name and t.name.lower() == 'sandbox')) else bool(team_admin_map.get(t.id, False))
+                }
+                for t in user.teams
+            ]
         }
     }
 
@@ -136,6 +189,25 @@ def read_users_me(
     db: Session = Depends(database.get_db),
 ):
     """Returns the currently authenticated user's profile, admin status, and teams."""
+    # Ensure user has Sandbox team membership
+    sandbox_team = db.query(models.Team).filter(
+        (models.Team.is_sandbox == True) | (models.Team.name == "Sandbox")
+    ).first()
+    if sandbox_team:
+        link_exists = db.query(models.user_teams).filter(
+            models.user_teams.c.user_id == current_user.id,
+            models.user_teams.c.team_id == sandbox_team.id
+        ).first()
+        if not link_exists:
+            stmt = models.user_teams.insert().values(
+                user_id=current_user.id,
+                team_id=sandbox_team.id,
+                is_team_admin=False
+            )
+            db.execute(stmt)
+            db.commit()
+            db.refresh(current_user)
+
     user_team_links = db.query(models.user_teams).filter_by(user_id=current_user.id).all()
     team_admin_map = {link.team_id: link.is_team_admin for link in user_team_links}
     return {
@@ -148,7 +220,8 @@ def read_users_me(
             {
                 "id": t.id,
                 "name": t.name,
-                "is_team_admin": bool(team_admin_map.get(t.id, False)),
+                "is_sandbox": bool(getattr(t, 'is_sandbox', False) or (t.name and t.name.lower() == 'sandbox')),
+                "is_team_admin": False if (getattr(t, 'is_sandbox', False) or (t.name and t.name.lower() == 'sandbox')) else bool(team_admin_map.get(t.id, False)),
             }
             for t in current_user.teams
         ],

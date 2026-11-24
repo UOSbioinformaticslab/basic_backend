@@ -128,6 +128,7 @@ class TeamResponse(BaseModel):
     hdr_gateway_email: Optional[str] = None
     introduction: Optional[str] = None
     url: Optional[str] = None
+    is_sandbox: bool = False
 
     class Config:
         from_attributes = True

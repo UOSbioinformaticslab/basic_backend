@@ -41,6 +41,7 @@ class Team(Base):
     hdr_gateway_email = Column(String, nullable=True)
     introduction = Column(String, nullable=True)
     url = Column(String, nullable=True)
+    is_sandbox = Column(Boolean, default=False)
     datasets = relationship("Dataset", back_populates="team")
     members = relationship("User", secondary=user_teams, back_populates="teams")
     projects = relationship("Project", back_populates="team")

@@ -14,7 +14,8 @@ def get_all_teams(db: Session = Depends(database.get_db)):
         "name": t.name, 
         "introduction": t.introduction, 
         "notification_email": t.notification_email,
-        "url": t.url
+        "url": t.url,
+        "is_sandbox": bool(getattr(t, "is_sandbox", False) or (t.name and t.name.lower() == "sandbox"))
     } for t in teams]
 
 @router.post("/{team_id}/invitations", response_model=schemas.TeamInvitationResponse)
@@ -24,6 +25,7 @@ def create_invitation(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(dependencies.get_current_user)
 ):
+    dependencies.enforce_non_sandbox(db, team_id, "Inviting members")
     # Verify current user is in the team or an admin
     if not current_user.is_admin and team_id not in [t.id for t in current_user.teams]:
         raise HTTPException(status_code=403, detail="Not authorized to invite to this team")
@@ -126,6 +128,7 @@ def cancel_team_invitation(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(dependencies.get_current_user)
 ):
+    dependencies.enforce_non_sandbox(db, team_id, "Managing invitations")
     if not current_user.is_admin and team_id not in [t.id for t in current_user.teams]:
         raise HTTPException(status_code=403, detail="Not authorized to manage invitations for this team")
         
@@ -250,6 +253,7 @@ def toggle_team_admin(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(dependencies.get_current_user),
 ):
+    dependencies.enforce_non_sandbox(db, team_id, "Assigning team administrators")
     dependencies.verify_team_admin(team_id, current_user, db)
     stmt = (
         models.user_teams.update()
@@ -272,6 +276,7 @@ def remove_team_member(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(dependencies.get_current_user),
 ):
+    dependencies.enforce_non_sandbox(db, team_id, "Removing members")
     dependencies.verify_team_admin(team_id, current_user, db)
     user = db.query(models.User).filter(models.User.id == user_id).first()
     team = db.query(models.Team).filter(models.Team.id == team_id).first()
@@ -293,6 +298,7 @@ def update_notification_email(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(dependencies.get_current_user),
 ):
+    dependencies.enforce_non_sandbox(db, team_id, "Updating team configuration")
     dependencies.verify_team_admin(team_id, current_user, db)
     team = db.query(models.Team).filter(models.Team.id == team_id).first()
     if not team:
@@ -395,6 +401,7 @@ def update_team(
     db: Session = Depends(database.get_db),
     current_user: models.User = Depends(dependencies.get_current_user)
 ):
+    dependencies.enforce_non_sandbox(db, team_id, "Updating team configuration")
     if not current_user.is_admin and team_id not in [t.id for t in current_user.teams]:
         raise HTTPException(status_code=403, detail="Not authorized to update this team")
         

@@ -268,6 +268,8 @@ def save_metadata_progress(
     if target_team_id not in user_team_ids:
         raise HTTPException(status_code=403, detail="User is not a member of the specified team")
 
+    dependencies.enforce_non_sandbox(db, target_team_id, "Creating datasets")
+
     is_active = bool(dataset_in.active or dataset_in.status == models.Dataset.STATUS_ACTIVE)
 
     db_dataset = models.Dataset(
@@ -326,10 +328,13 @@ def update_metadata_progress(
     if not db_dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
 
+    dependencies.enforce_non_sandbox(db, db_dataset.team_id, "Updating datasets")
+
     if dataset_in.team_id:
         user_team_ids = [team.id for team in current_user.teams]
         if dataset_in.team_id not in user_team_ids:
             raise HTTPException(status_code=403, detail="User is not a member of the specified team")
+        dependencies.enforce_non_sandbox(db, dataset_in.team_id, "Updating datasets")
         db_dataset.team_id = dataset_in.team_id
 
     # Check for unpublish request
@@ -397,6 +402,9 @@ async def link_to_project(
     if not db_project:
         raise HTTPException(status_code=404, detail="Project not found")
 
+    dependencies.enforce_non_sandbox(db, db_dataset.team_id, "Linking datasets")
+    dependencies.enforce_non_sandbox(db, db_project.team_id, "Linking projects")
+
     # 3. Check for an existing link to avoid unique constraint errors
     existing = db.query(models.ProjectDataset).filter(
         models.ProjectDataset.dataset_id == dataset_id,
@@ -426,6 +434,13 @@ async def unlink_from_project(
     if not link:
         raise HTTPException(status_code=404, detail="Link between dataset and project not found")
 
+    db_dataset = crud.get_dataset(db, dataset_id=dataset_id)
+    db_project = crud.get_project(db, project_id=project_id)
+    if db_dataset:
+        dependencies.enforce_non_sandbox(db, db_dataset.team_id, "Unlinking datasets")
+    if db_project:
+        dependencies.enforce_non_sandbox(db, db_project.team_id, "Unlinking projects")
+
     try:
         db.delete(link)
         db.commit()
@@ -449,6 +464,8 @@ def delete_dataset(
 
     if not db_dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
+
+    dependencies.enforce_non_sandbox(db, db_dataset.team_id, "Deleting datasets")
 
     try:
         db.delete(db_dataset)
@@ -607,6 +624,10 @@ def recommend_dataset_filters(
 
     # If metadata has no substantive text yet, but a dataset_id is provided, try loading from the database
     eff_meta = metadata.get('metadata_blob') if isinstance(metadata.get('metadata_blob'), dict) else metadata
+    target_team = eff_meta.get('team_id') or getattr(req, 'team_id', None)
+    if target_team and dependencies.check_sandbox_team(db, target_team):
+        return []
+
     has_text = bool(
         (eff_meta.get('summary') or {}).get('title') or
         (eff_meta.get('summary') or {}).get('abstract') or

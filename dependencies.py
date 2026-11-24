@@ -76,3 +76,20 @@ def verify_team_admin(team_id: int, current_user: models.User, db: Session):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Team admin privileges required",
         )
+
+
+def check_sandbox_team(db: Session, team_id: int | None) -> bool:
+    """Checks if a given team_id is the Sandbox / read-only demo team."""
+    if not team_id:
+        return False
+    team = db.query(models.Team).filter(models.Team.id == team_id).first()
+    return bool(team and (getattr(team, 'is_sandbox', False) or (team.name and team.name.lower() == 'sandbox')))
+
+
+def enforce_non_sandbox(db: Session, team_id: int | None, action: str = "Database modifications"):
+    """Raises a 403 Forbidden error if an operation is attempted in the Sandbox team context."""
+    if check_sandbox_team(db, team_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"The Sandbox team is read-only. {action} is disabled in Sandbox mode."
+        )
